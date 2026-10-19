@@ -43,7 +43,7 @@ useHead(() => ({ htmlAttrs: { lang: locale.value }, link: [
           <NuxtLink v-for="article in articles" :key="article.path" :to="local(article.path)" class="site-story"><span>{{ article.category }}</span><h2>{{ article.title }}</h2><p>{{ article.summary }}</p></NuxtLink>
           <p v-if="!articles.length" class="site-empty">{{ locale === 'ja' ? '新しい記事をお届けします。テーマごとのガイドもご覧ください。' : 'New stories are on the way. Explore the topic guides in the meantime.' }}</p>
         </section>
-        <section v-if="path === '/sitemap'" class="site-map"><ul><li v-for="entry in content.pages.filter(item => item.status !== 'draft')" :key="entry.path"><NuxtLink :to="local(entry.path)">{{ entry.label || entry.title.replace(/\n/g, ' ') }}</NuxtLink></li></ul></section>
+        <section v-if="path === '/sitemap'" class="site-map"><ul><li v-for="entry in content.pages.filter(item => item.status !== 'draft' && item.path !== path)" :key="entry.path"><NuxtLink :to="local(entry.path)">{{ entry.label || entry.title.replace(/\n/g, ' ') }}</NuxtLink></li></ul></section>
       </div>
     </main>
     <footer class="site-footer"><div><strong>{{ content.brand }}</strong><p>{{ content.caption }}</p></div><nav :aria-label="locale === 'ja' ? 'フッター' : 'Footer'"><NuxtLink v-if="content.pages.some(item => item.path === '/contact')" :to="local('/contact')">{{ locale === 'ja' ? 'お問い合わせ' : 'Contact' }}</NuxtLink><NuxtLink :to="local('/privacy')">{{ locale === 'ja' ? 'プライバシー' : 'Privacy' }}</NuxtLink><NuxtLink :to="local('/security')">{{ locale === 'ja' ? 'セキュリティ' : 'Security' }}</NuxtLink><NuxtLink :to="local('/sitemap')">{{ locale === 'ja' ? 'サイトマップ' : 'Sitemap' }}</NuxtLink></nav></footer>
