@@ -64,15 +64,25 @@ run('node', ['node_modules/nuxt/bin/nuxt.mjs', 'build'])
 const port = await new Promise(done => {
   const socket = createServer().listen(0, '127.0.0.1', () => { const port = socket.address().port; socket.close(() => done(port)) })
 })
-const server = spawn('node', ['.output/server/index.mjs'], { cwd: root, env: { ...env, NITRO_PORT: String(port), NITRO_HOST: '127.0.0.1' }, stdio: 'ignore' })
+const server = spawn('node', ['.output/server/index.mjs'], { cwd: root, env: { ...env, NITRO_PORT: String(port), NITRO_HOST: '127.0.0.1' }, stdio: ['ignore', 'pipe', 'pipe'] })
+let serverOutput = ''
+let spawnFailure: string | null = null
+for (const stream of [server.stdout, server.stderr]) stream?.on('data', chunk => { serverOutput = (serverOutput + String(chunk)).slice(-4096) })
+server.on('error', error => { spawnFailure = error.message })
 try {
   const base = `http://127.0.0.1:${port}`
   let ready = false
+  let lastStatus: number | null = null
   for (let i = 0; i < 40; i++) {
-    try { if ((await fetch(base)).ok) { ready = true; break } } catch {}
+    if (spawnFailure || server.exitCode !== null || server.signalCode !== null) throw Error(`Fixture server exited before readiness: ${spawnFailure ?? server.exitCode ?? server.signalCode}; ${serverOutput}`)
+    try {
+      const response = await fetch(base, { signal: AbortSignal.timeout(750) })
+      lastStatus = response.status; await response.body?.cancel()
+      if (response.ok) { ready = true; break }
+    } catch {}
     await new Promise(done => setTimeout(done, 250))
   }
-  assert.ok(ready)
+  assert.ok(ready, `Fixture server not ready; HTTP=${lastStatus}, exit=${server.exitCode}, output=${serverOutput}`)
   for (const locale of ['ja', 'en']) {
     for (const path of ['/', '/docs', '/docs/getting-started', '/docs/security']) {
       const route = locale === 'ja' ? path : `/en${path === '/' ? '' : path}`
@@ -96,4 +106,12 @@ try {
   if (editorial) run('node', [new URL('./editorial-browser.mjs', import.meta.url).pathname, base, editorial])
   if (process.argv[3]) run('node', [resolve(process.argv[3]), root, base])
   console.log(JSON.stringify({ root, result: 'pass', actual_archive: archive, public_dependencies: true, routes_SSR: 8, unset_links: true, CLI: true, core_validator_import: true, typecheck: true, build: true }))
-} finally { server.kill('SIGTERM') }
+} finally {
+  if (server.exitCode === null && server.signalCode === null) {
+    const exited = new Promise<void>(done => server.once('exit', () => done()))
+    server.kill('SIGTERM')
+    const timer = setTimeout(() => { if (server.exitCode === null && server.signalCode === null) server.kill('SIGKILL') }, 2000)
+    timer.unref()
+    try { await exited } finally { clearTimeout(timer) }
+  }
+}
