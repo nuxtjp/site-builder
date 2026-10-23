@@ -22,7 +22,7 @@ jobs:
       - name: Verify policy regression tests
         run: cd .github && python3 -m unittest discover -s policy-tests
       - name: Reject retired publication modes
-        run: python3 .github/scripts/test-release-gate.py
+        run: python3 .github/scripts/test_release_plan.py
       - name: Check policy types
         run: |
           python3 -m venv "$RUNNER_TEMP/policy-types"

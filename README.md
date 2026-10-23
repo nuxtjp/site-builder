@@ -6,7 +6,7 @@ Generate a Japanese/English introduction site from one validated configuration. 
 
 ## Install and configure
 
-Install the published package version `0.1.4` from the official npm registry. Use Node.js 22.19+ or 24.11+, Nuxt 4.5.1+ in major 4, and Vue `^3.5.40`.
+Install the published version identified by `npm view @nuxtjp/localized-site version`. Use Nuxt `^4.6.2`, Vue `^3.5.40`, and Node.js 22.19+ or 24.11+.
 
 ```sh
 pnpm add @nuxtjp/localized-site nuxt vue
