@@ -47,11 +47,11 @@ jobs:
           retention-days: 7
       - run: pnpm exec playwright install --with-deps chromium
       - name: Verify backports in a fresh packed consumer
-        run: node .github/scripts/package-consumer-security.mjs "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}" @nuxtjp/localized-site
+        run: node .github/scripts/package-consumer-security.mts "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}" @nuxtjp/localized-site
       - name: Exercise public showcase in an isolated archive consumer
-        run: node .github/scripts/package-consumer.mjs "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}"
+        run: node .github/scripts/package-consumer.mts "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}"
       - name: Verify editorial portfolio, organization and product scopes from the archive
         run: |
-          EDITORIAL_TEST_MODE=portfolio node .github/scripts/package-consumer.mjs "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}"
-          EDITORIAL_TEST_MODE=organization node .github/scripts/package-consumer.mjs "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}"
-          EDITORIAL_TEST_MODE=product node .github/scripts/package-consumer.mjs "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}"
+          EDITORIAL_TEST_MODE=portfolio node .github/scripts/package-consumer.mts "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}"
+          EDITORIAL_TEST_MODE=organization node .github/scripts/package-consumer.mts "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}"
+          EDITORIAL_TEST_MODE=product node .github/scripts/package-consumer.mts "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}"

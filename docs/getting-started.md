@@ -6,7 +6,7 @@
 公開確認後に、Nuxtホストへパッケージを導入してください。`0.1.0`は現在公開準備中です。
 
 ```sh
-pnpm add --save-exact @nuxtjp/localized-site@0.1.0 nuxt@4.5.1 vue@3.5.43
+pnpm add --save-exact @nuxtjp/localized-site@0.2.7 nuxt@4.6.2 vue@3.5.43
 ```
 
 ```ts
@@ -34,7 +34,7 @@ privacy/contactは説明のみで、リンク先や送信機能を仮定しま�
 Use one configuration for Japanese/English introduction, getting-started and security content.
 Verify registry publication before installing `0.1.0`; it is currently being prepared for release.
 
-Install the exact package with Nuxt 4.5.1 and Vue 3.5.43, register the module with an explicit `contentRoot`, then copy and customize the generic example.
+Install the exact package with Nuxt 4.6.2 and Vue 3.5.43, register the module with an explicit `contentRoot`, then copy and customize the generic example.
 Both locales must satisfy the schema. Set `origin` to the actual public site URL.
 Run content validation, host typecheck and host build using the commands above.
 

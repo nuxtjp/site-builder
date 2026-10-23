@@ -6,7 +6,7 @@
 
 ## 導入と設定
 
-`0.1.0`はnpmで公開済みです。Node.js 22.19以降または24.11以降、Nuxt 4.5.1以降の4系、Vue `^3.5.40`を使用してください。
+公開版は `npm view @nuxtjp/localized-site version` で確認してください。Nuxt `^4.6.2`、Vue `^3.5.40`、Node.js 22.19以降または24.11以降を使用します。
 
 ```sh
 pnpm add @nuxtjp/localized-site nuxt vue
