@@ -14,7 +14,7 @@ for (const key of ['NPM_TOKEN', 'NODE_AUTH_TOKEN', 'GH_TOKEN', 'GITHUB_TOKEN']) 
 writeFileSync(join(root, '.npmrc'), '')
 env.NPM_CONFIG_USERCONFIG = join(root, '.npmrc')
 writeFileSync(join(root, 'package.json'), JSON.stringify({
-  private: true, type: 'module', dependencies: { '@nuxtjp/localized-site': `file:${archive}`, nuxt: '4.6.2', vue: '3.5.43' },
+  private: true, type: 'module', dependencies: { '@nuxtjp/localized-site': `file:${archive}`, nuxt: '4.6.2', vue: '3.5.44' },
   devDependencies: { typescript: '5.9.3', 'vue-tsc': '3.2.8' }
 }, null, 2))
 function run(command, args) {
