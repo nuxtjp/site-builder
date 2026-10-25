@@ -67,15 +67,15 @@ pnpm pack
 
 ## Public showcase / OSS紹介
 
-[Dashboard, product LP, public feed and owner operations](docs/public-showcase.ja.md) — opt-in 0.2.0 candidate; staged owner approval is still required.
+[Dashboard, product LP, public feed and owner operations](docs/public-showcase.ja.md) — 明示的に有効化する公開紹介機能。
 
-## 組織のOSS紹介候補（0.2.2）
+## 組織のOSS紹介
 
 content rootの `public/oss/showcase.json` に既存 `nuxtjp://showcase/v1` のreview済み公開snapshotを置くと、localeごとの `/oss` 一覧と `/oss/<entry-id>` 紹介ページを追加します。既存Showcase validator/component/collectorを再利用し、別のschemaや表示実装を増やしません。viewからprovider accountやregistryへ接続せず、未取得・期限切れと0件を区別します。各公開sourceのIssueへfeedbackを案内します。
 
 組織presetは公開maintenanceファイルがない場合にendpointを無効化します。一般consumerは既存defaultを維持し、`maintenance: false` で明示的に無効化できます。状態を創作してoperationalと表示しません。公開snapshotはregular file・上限262144bytes・symlink不可とし、ルート競合は拒否します。
 
-0.2.2は公開前のsource候補です。現行0.2.1のregistry公開と区別し、候補hash/consumer受入を確認後に公開します。
+公開版はregistryで確認し、配布物と独立consumerの受入を確認して採用します。
 
 Dependency updates: [repository policy](docs/dependency-updates.md).
 Registry releases: [version tags and GitHub OIDC](docs/registry-release.md).
