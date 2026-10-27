@@ -28,6 +28,13 @@ pnpm exec nuxt build
 
 ## 動作と制約
 
+[公開文書とsem-lang連携方針](docs/agent-readable-documents.ja.md)に、HTMLとMarkdownの
+生成、各ownerの責務、意味対応付けの受入条件を定めています。0.4.0のsource candidateで
+MDC表示、静的Markdownとllms.txtを実装しました。[編集・生成手順](docs/markdown-mdc.ja.md)を参照。
+検索・回答参照・学習を許可するrobots.txtとContent Signals、sitemapとLinkの生成、
+任意のASSETS配信アダプターは[AIファーストの構成と受入](docs/agent-readiness.ja.md)を参照してください。
+正式公開とconsumerの依存更新は未完了であり、意味解析の追加は別の受入です。
+
 privacy/contactは説明文として表示し、未設定のリンクや操作を生成しません。
 メンテナンス表示は、ブラウザから同一originの`/maintenance.json`を読みます。取得・形式・期限の検証に失敗した場合は表示せず、サイト本文と言語切替は利用できます。
 配布物だけを試す場合は、registry版の代わりに承認された正確なTGZを導入してください。この手順はサイトの公開やregistry設定を行いません。
@@ -91,3 +98,9 @@ Registry releases: [version tags and GitHub OIDC](docs/registry-release.md).
 設定ボタンだけを設けます。Cloudflare側の自動挿入は別途管理が必要です。
 
 英語が既定のサイトでは、同意設定に `defaultLocale: "en"` を指定できます。`/ja`・`/en` から始まるURLでは明示した言語を優先し、省略時は既存の日本語既定を保持します。
+
+
+0.5.0 では `NuxtJpServiceSite` に共通表示と CSS を集約しています。
+ページはデータと名前付き slot の宣言だけを持ち、ビルド前の `declarative` 検査で
+CSS の再混入を検出します。固有の判断・通信・コンポーネントのスタイルは各所有者に残します。
+詳しくは[文書・表示の契約](docs/markdown-mdc.ja.md)を参照してください。

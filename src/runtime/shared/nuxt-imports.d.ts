@@ -1,6 +1,8 @@
 declare module '#imports' {
   export const defineNuxtPlugin: typeof import('nuxt/app').defineNuxtPlugin
   export const useAppConfig: typeof import('nuxt/app').useAppConfig
+  export const useSeoMeta: typeof import('nuxt/app').useSeoMeta
+  export const createError: typeof import('nuxt/app').createError
   export const useLocalizedSite: typeof import(
     '../app/composables/useLocalizedSite'
   ).useLocalizedSite

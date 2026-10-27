@@ -1,6 +1,9 @@
-import { resolve } from 'node:path'
+import { resolve, join } from 'node:path'
+import { materializeDefaultDocuments } from '../documents/default.mjs'
+import mdcModule from '@nuxtjs/mdc'
 import {
   addComponent,
+  addTemplate,
   addImports,
   addLayout,
   addPlugin,
@@ -46,11 +49,27 @@ const localizedSiteModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOp
       throw new Error('nuxtJpLocalizedSite.contentRoot must be declared explicitly')
     }
     const resolver = createResolver(import.meta.url)
+    await installModule(mdcModule, { highlight: false, components: { prose: false } })
     if (options.consent) await installModule(resolver.resolve('./runtime/consent/module'), options.consent)
     const { loadSiteConfig } = await loadValidator()
     const config = loadSiteConfig(resolve(nuxt.options.rootDir, options.contentRoot))
     const pageFile = resolver.resolve('./runtime/app/pages/LocalizedContentPage.vue')
     const routes = siteRoutes(config)
+    const documentOutput = await materializeDefaultDocuments(config, join(nuxt.options.rootDir, 'node_modules/.cache/nuxtjp-documents', config.siteId))
+    addTemplate({ filename: 'nuxtjp-default-documents.mjs', getContents: () => `export { default } from ${JSON.stringify(documentOutput.components)}` })
+    addTemplate({ filename: 'nuxtjp-default-documents.d.mts', getContents: () => "import type { FunctionalComponent } from 'vue'\ndeclare const components: Record<string, FunctionalComponent>\nexport default components\n" })
+    // Nitro can initialize before filesystem pages resolve. Register assets during
+    // setup, then select them from the final app before public assets are copied.
+    const nitroConfig = nuxt.options.nitro as { publicAssets?: { dir: string; maxAge: number }[] }
+    nitroConfig.publicAssets ??= []
+    nitroConfig.publicAssets.push({ dir: documentOutput.publicDirectory, maxAge: 0 })
+    nuxt.hook('nitro:init', nitro => {
+      const asset = nitro.options.publicAssets.find(asset => asset.dir === documentOutput.publicDirectory)
+      nuxt.hook('app:templates', app => {
+        nitro.options.publicAssets = nitro.options.publicAssets.filter(asset => asset.dir !== documentOutput.publicDirectory)
+        if (asset && app.pages?.some(page => page.file === pageFile)) nitro.options.publicAssets.push(asset)
+      })
+    })
     const presentation = validatePresentation(options.presentation)
     const layout = presentation ? 'editorial-site' : 'localized-site'
     nuxt.options.runtimeConfig.public.nuxtJpPresentation = presentation
@@ -63,6 +82,7 @@ const localizedSiteModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOp
     nuxt.options.runtimeConfig.public.nuxtJpLocalizedSite = config
     addLayout(resolver.resolve('./runtime/app/layouts/localized-site.vue'), 'localized-site')
     if (presentation) addLayout(resolver.resolve('./runtime/app/layouts/editorial-site.vue'), 'editorial-site')
+    addComponent({ name: 'NuxtJpServiceSite', filePath: resolver.resolve('./runtime/service-site/ServiceSite.vue') })
     addComponent({
       name: 'NuxtJpLocalizedLanguageSwitcher',
       filePath: resolver.resolve(
@@ -125,6 +145,8 @@ const localizedSiteModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOp
     addPrerenderRoutes(routes)
     const stylesheet = resolver.resolve('./runtime/app/assets/localized-site.css')
     if (!nuxt.options.css.includes(stylesheet)) nuxt.options.css.push(stylesheet)
+    const serviceStylesheet = resolver.resolve('./runtime/service-site/site.css')
+    if (!nuxt.options.css.includes(serviceStylesheet)) nuxt.options.css.push(serviceStylesheet)
     if (presentation) nuxt.options.css.push(resolver.resolve('./runtime/app/assets/editorial-site.css'))
   }
 })

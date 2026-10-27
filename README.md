@@ -60,6 +60,15 @@ pnpm pack
 
 ## Documentation and license
 
+The [public document and sem-lang integration policy](docs/agent-readable-documents.ja.md)
+defines ownership and acceptance. The 0.4.0 source candidate implements native MDC,
+static Markdown and llms.txt; see [editing and generation](docs/markdown-mdc.ja.md).
+See [AI-first discovery and acceptance](docs/agent-readiness.ja.md) for generated
+robots.txt, explicit permission for search/AI input/training, sitemap/Link headers,
+and the optional published-route ASSETS delivery adapter. Hosting acceptance is separate.
+Its formal registry release and consumer dependency updates are still required;
+semantic integration remains a separate acceptance step.
+
 [Usage guide](https://github.com/nuxtjp/site-builder/blob/main/docs/getting-started.md) · [Schema](schemas/localized-site-v1.schema.json) · [Tests](https://github.com/nuxtjp/site-builder/tree/main/test) · [Security reporting](https://github.com/nuxtjp/site-builder/blob/main/SECURITY.md)
 
 Code: [Apache-2.0](LICENSE). [LICENSE-PREVIOUS](LICENSE-PREVIOUS) retains prior grants, and [NOTICE](NOTICE) preserves attribution.
@@ -139,3 +148,10 @@ stale revision, both languages and necessary-only operation using synthetic
 tracking endpoints; it never calls a real analytics provider.
 
 Consent definitions may set `defaultLocale: "en"` for English-default sites. Explicit `/ja` and `/en` URL prefixes override it; omitting the field preserves the Japanese default.
+
+
+Version 0.5.0 adds `NuxtJpServiceSite`: route adapters declare data
+and named component slots while the module owns shared presentation and CSS.
+`@nuxtjp/localized-site/declarative` validates CSS-free page adapters before builds.
+Product-specific behavior and scoped component styles stay with their owner.
+See [the document and presentation contract](docs/markdown-mdc.ja.md).

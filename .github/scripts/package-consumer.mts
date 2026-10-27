@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, cpSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, cpSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { spawnSync, spawn } from 'node:child_process'
 import { createServer } from 'node:net'
+import { pathToFileURL } from 'node:url'
 
 const archive = resolve(process.argv[2])
 const editorial = process.env.EDITORIAL_TEST_MODE
@@ -15,7 +16,7 @@ writeFileSync(join(root, '.npmrc'), '')
 env.NPM_CONFIG_USERCONFIG = join(root, '.npmrc')
 writeFileSync(join(root, 'package.json'), JSON.stringify({
   private: true, type: 'module', dependencies: { '@nuxtjp/localized-site': `file:${archive}`, nuxt: '4.6.2', vue: '3.5.44' },
-  devDependencies: { typescript: '5.9.3', 'vue-tsc': '3.2.8' }
+  devDependencies: { typescript: '5.9.3', 'vue-tsc': '3.2.8', '@types/node': '24.19.2' }
 }, null, 2))
 function run(command, args) {
   const p = spawnSync(command, args, { cwd: root, env, encoding: 'utf8', timeout: 600_000 })
@@ -95,10 +96,47 @@ try {
       assert.ok(html.includes('rel="canonical"'))
       assert.ok(html.includes('hreflang="ja"') && html.includes('hreflang="en"'))
       assert.ok(html.includes(locale === 'ja' ? 'サンプルサービス' : 'Sample Service'))
+      assert.ok(html.includes('type="text/markdown"'))
+      const markdown = await fetch(base + '/raw' + (route === '/' ? '/index' : route) + '.md')
+      assert.equal(markdown.status, 200, `Markdown unavailable for ${route}: ${markdown.url}`)
+      assert.match(markdown.headers.get('content-type') ?? '', /^text\/markdown\b/)
+      const body = await markdown.text()
+      const content = JSON.parse(readFileSync(join(root, 'site.config.json'), 'utf8')).content[locale]
+      const expected = path === '/' ? { title: content.brand, sections: [] } : Object.values(content.docs).find((doc: any) => doc.slug === path) as any
+      assert.ok(body.includes(expected.title))
+      for (const section of expected.sections) for (const paragraph of section.body) assert.ok(body.includes(paragraph))
+      assert.ok(!body.includes('::document-link') && !body.startsWith('---'))
+      assert.ok(body.includes(`Canonical: https://example.test${route}\n`))
       assert.ok(!/<a[^>]*href="(?:#|mailto:|tel:|javascript:|undefined|)"/.test(html))
     }
   }
   assert.equal((await fetch(base + '/missing-page')).status, 404)
+  const llms = await fetch(base + '/llms.txt')
+  assert.equal(llms.status, 200)
+  assert.equal((await llms.text()).split('\n').filter(line => line.startsWith('- [')).length, 8)
+  const robots = await fetch(base + '/robots.txt')
+  assert.equal(robots.status, 200)
+  const policy = await robots.text()
+  assert.ok(policy.includes('search=yes, ai-input=yes, ai-train=yes'))
+  assert.ok(policy.includes('User-agent: GPTBot\nAllow: /'))
+  assert.ok(policy.includes('Sitemap: https://example.test/sitemap.xml'))
+  const packageRoot = join(root, 'node_modules/@nuxtjp/localized-site')
+  const { documentDelivery } = await import(pathToFileURL(join(packageRoot, 'documents/index.mjs')).href)
+  const { createDocumentWorker } = await import(pathToFileURL(join(packageRoot, 'documents/worker.mjs')).href)
+  const facts = JSON.parse(readFileSync(join(root, 'site.config.json'), 'utf8'))
+  const delivery = await documentDelivery(pathToFileURL(join(root, 'node_modules/.cache/nuxtjp-documents', facts.siteId) + '/'))
+  const worker = createDocumentWorker(delivery)
+  const assets = { ASSETS: { fetch(request: Request) {
+    const url = new URL(request.url)
+    return fetch(base + url.pathname + url.search, { method: request.method, headers: request.headers, redirect: 'manual' })
+  } } }
+  for (const route of ['/', '/en', '/docs', '/en/docs']) {
+    const result = await worker.fetch(new Request('https://example.test' + route, { headers: { accept: 'text/markdown' } }), assets)
+    assert.equal(result.status, 200)
+    assert.match(result.headers.get('content-type') ?? '', /^text\/markdown/)
+    assert.match(result.headers.get('vary') ?? '', /Accept/i)
+    assert.ok((await result.text()).includes('Canonical: https://example.test' + route))
+  }
   if (editorial === 'product') for (const prefix of ['', '/en']) assert.equal((await fetch(base + prefix + '/oss')).status, 404)
   const lock = JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8'))
   for (const [name, item] of Object.entries(lock.packages)) {
@@ -116,4 +154,79 @@ try {
     timer.unref()
     try { await exited } finally { clearTimeout(timer) }
   }
+}
+
+if (editorial === 'product') {
+  // Exercise the actual shipped scaffold and shared UI, including replacement of
+  // default pages. Removed default documents must not remain in public assets.
+  const source = join(root, 'reviewed-documents')
+  const paths = ['/', '/docs', '/journal', '/privacy', '/security', '/sitemap', '/owned']
+  const facts = { siteId: 'owned-site', origin: 'https://example.test', defaultLocale: 'ja', locales: {} }
+  for (const locale of ['ja', 'en']) {
+    const directory = join(source, 'documents', locale)
+    mkdirSync(directory, { recursive: true })
+    facts.locales[locale] = { brand: 'Site-owned index', caption: '', origin: facts.origin, locale,
+      accent: '#087f5b', icon: '/brand/owned.svg', navigation: [{ title: 'Owned guide', href: '/docs' }], resources: [], pageOrder: paths }
+    for (const path of paths) {
+      const title = path === '/owned' ? 'Site-owned document' : 'Owned ' + (path === '/' ? 'home' : path.slice(1))
+      writeFileSync(join(directory, (path === '/' ? 'index' : path.slice(1)) + '.md'), `---
+path: ${JSON.stringify(path)}
+title: ${JSON.stringify(title)}
+summary: "Public source selected by the site owner."
+kind: ${path === '/' ? 'home' : 'page'}
+status: published
+---
+
+## Owned content
+
+The document body comes from the reviewed MDC source.
+
+::document-link{title="Owned guide" href="/docs"}
+::
+`)
+    }
+  }
+  writeFileSync(join(source, 'site.json'), JSON.stringify(facts))
+  mkdirSync(join(root, 'public/brand'), { recursive: true })
+  writeFileSync(join(root, 'public/brand/owned.svg'), '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#087f5b"/></svg>')
+  run('node', ['node_modules/@nuxtjp/localized-site/templates/adopt.mjs', join(root, 'site'), source])
+  const adapter = join(root, 'site/SitePage.vue')
+  writeFileSync(adapter, readFileSync(adapter, 'utf8').replace('<NuxtJpServiceSite ', '<NuxtJpServiceSite navigation-mode="tablet-menu" '))
+  writeFileSync(join(root, 'nuxt.config.ts'), `import sitePages from './site/module'
+export default defineNuxtConfig({
+    modules: [['@nuxtjp/localized-site', {contentRoot: '.', presentation: {theme: 'nuxtjp', scope: 'product'}}], sitePages],
+    devtools: {enabled: false}
+  })`)
+  run('node', ['node_modules/nuxt/bin/nuxt.mjs', 'prepare'])
+  run('node', ['node_modules/nuxt/bin/nuxt.mjs', 'typecheck'])
+  run('node', ['node_modules/nuxt/bin/nuxt.mjs', 'build'])
+  const index = readFileSync(join(root, '.output/public/llms.txt'), 'utf8')
+  assert.ok(index.startsWith('# Site-owned index\n'))
+  assert.equal(index.split('\n').filter(line => line.startsWith('- [')).length, 14)
+  assert.ok(readFileSync(join(root, '.output/public/raw/owned.md'), 'utf8').includes('# Site-owned document\n'))
+  for (const route of ['docs/security', 'docs/getting-started', 'en/docs/security']) {
+    assert.equal(existsSync(join(root, '.output/public/raw', route + '.md')), false, `Removed page document leaked: ${route}`)
+  }
+  const service = spawn('node', ['.output/server/index.mjs'], { cwd: root, env: { ...env, NITRO_PORT: String(port), NITRO_HOST: '127.0.0.1' }, stdio: ['ignore', 'pipe', 'pipe'] })
+  let output = ''
+  for (const stream of [service.stdout, service.stderr]) stream.on('data', chunk => { output = (output + String(chunk)).slice(-4096) })
+  try {
+    const base = `http://127.0.0.1:${port}`
+    let ready = false
+    for (let i = 0; i < 40; i++) {
+      assert.equal(service.exitCode, null, output)
+      try { const response = await fetch(base); await response.body?.cancel(); if (response.ok) { ready = true; break } } catch {}
+      await new Promise(done => setTimeout(done, 250))
+    }
+    assert.ok(ready, output)
+    run('node', [new URL('./service-site-browser.mjs', import.meta.url).pathname, base])
+  } finally {
+    if (service.exitCode === null && service.signalCode === null) {
+      const exited = new Promise<void>(done => service.once('exit', () => done()))
+      service.kill('SIGTERM')
+      const timer = setTimeout(() => service.kill('SIGKILL'), 2000); timer.unref()
+      try { await exited } finally { clearTimeout(timer) }
+    }
+  }
+  console.log(JSON.stringify({ site_owned_presentation: 'pass', actual_shipped_scaffold: true, shared_css_and_MDC: true, removed_default_documents: 'not served' }))
 }
