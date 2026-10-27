@@ -46,6 +46,12 @@ MCPの最新revision全体への準拠を主張しない。現実装の交渉対
 サイトにリンクやAPI Catalogを配置するのは、対象の正規HTTPS endpointを受け入れ、
 initializeとtools/listを読戻した後とする。架空のendpointやOAuth metadataを作らない。
 
+gatewayのcatalog v2は1文書16KiB、本文合計32KiB、64リソース、TOML全体64KiBを上限とする。
+本文はpublic分類、source URL、SHA256、license、attributionを明示して渡す。
+URLを指定してもgatewayが内容を外部取得する構成ではない。全サイトの全文を1つのcatalogへ
+詰め込まず、ownerが選んだ重要文書だけをMCP resourceに登録する。全文の発見と取得は
+llms.txtとHTTP Markdownを使う。制限超過を黙って切り捨てたり上限解除で通したりしない。
+
 匿名公開文書への接続ではOAuthは不要。将来の非公開データや更新機能には別の認可設計と
 RFC 8414/9728 discoveryを必要とする。OriginやUser-Agentの一致を認証にしない。
 WebMCP、A2A、決済、スキル配布は、実際に提供する機能がある場合にだけ宣言する。
