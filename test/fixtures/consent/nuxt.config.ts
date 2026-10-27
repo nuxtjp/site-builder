@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 export default defineNuxtConfig({
   modules: [[fileURLToPath(new URL('../../../dist/runtime/consent/module.js', import.meta.url)), {
     schemaVersion: 1,
+    defaultLocale: process.env.CONSENT_FIXTURE_DEFAULT_LOCALE === 'en' ? 'en' : 'ja',
     policyUrl: 'https://hat-tech.co.jp/privacy',
     policyRevision: process.env.CONSENT_FIXTURE_REVISION || 'fixture-1',
     services: process.env.CONSENT_FIXTURE_EMPTY === '1' ? [] : [{

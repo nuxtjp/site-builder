@@ -31,6 +31,13 @@
       "items": {
         "$ref": "#/$defs/service"
       }
+    },
+    "defaultLocale": {
+      "enum": [
+        "ja",
+        "en"
+      ],
+      "description": "Language for unprefixed URLs. Defaults to ja; explicit /ja and /en prefixes override it."
     }
   },
   "$defs": {

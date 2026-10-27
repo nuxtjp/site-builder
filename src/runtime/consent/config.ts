@@ -10,6 +10,7 @@ export interface ConsentService {
 }
 export interface ConsentOptions {
   schemaVersion: 1
+  defaultLocale?: 'ja' | 'en'
   policyUrl: string
   policyRevision: string
   services: ConsentService[]
@@ -26,8 +27,8 @@ function url(value: unknown): value is string {
   try { const u = new URL(value); return u.protocol === 'https:' && !u.username && !u.password && !u.hash } catch { return false }
 }
 export function validateConsent(value: unknown): ConsentOptions {
-  const v = exact(value, ['schemaVersion', 'policyUrl', 'policyRevision', 'services'])
-  if (v.schemaVersion !== 1 || !url(v.policyUrl) || !text(v.policyRevision, 160) || !Array.isArray(v.services) || v.services.length > 20) throw new Error('Incomplete consent definition')
+  const v = exact(value, ['schemaVersion', 'defaultLocale', 'policyUrl', 'policyRevision', 'services'])
+  if ((v.defaultLocale !== undefined && v.defaultLocale !== 'ja' && v.defaultLocale !== 'en') || v.schemaVersion !== 1 || !url(v.policyUrl) || !text(v.policyRevision, 160) || !Array.isArray(v.services) || v.services.length > 20) throw new Error('Incomplete consent definition')
   const ids = new Set<string>(), urls = new Set<string>()
   for (const item of v.services) {
     const s = exact(item, ['id', 'label', 'purpose', 'category', 'scripts', 'cookies'])
@@ -42,4 +43,10 @@ export function validateConsent(value: unknown): ConsentOptions {
   }
   // Copy only after validation so build-time objects cannot mutate public config later.
   return JSON.parse(JSON.stringify(v)) as ConsentOptions
+}
+
+/** Explicit route language wins; an unprefixed URL uses the site's declared default. */
+export function consentLanguage(pathname: string, defaultLocale: 'ja' | 'en' = 'ja'): 'ja' | 'en' {
+  const explicit = /^\/(ja|en)(?:\/|$)/.exec(pathname)?.[1]
+  return explicit === 'en' ? 'en' : explicit === 'ja' ? 'ja' : defaultLocale
 }

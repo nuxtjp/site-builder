@@ -137,3 +137,5 @@ Run `pnpm test:consent:browser` after building the module. It exercises no-send
 before choice, rejection persistence, individual choices, withdrawal and cleanup,
 stale revision, both languages and necessary-only operation using synthetic
 tracking endpoints; it never calls a real analytics provider.
+
+Consent definitions may set `defaultLocale: "en"` for English-default sites. Explicit `/ja` and `/en` URL prefixes override it; omitting the field preserves the Japanese default.
