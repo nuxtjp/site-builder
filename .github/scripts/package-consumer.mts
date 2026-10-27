@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { spawnSync, spawn } from 'node:child_process'
 import { createServer } from 'node:net'
+import { pathToFileURL } from 'node:url'
 
 const archive = resolve(process.argv[2])
 const editorial = process.env.EDITORIAL_TEST_MODE
@@ -113,6 +114,29 @@ try {
   const llms = await fetch(base + '/llms.txt')
   assert.equal(llms.status, 200)
   assert.equal((await llms.text()).split('\n').filter(line => line.startsWith('- [')).length, 8)
+  const robots = await fetch(base + '/robots.txt')
+  assert.equal(robots.status, 200)
+  const policy = await robots.text()
+  assert.ok(policy.includes('search=yes, ai-input=yes, ai-train=yes'))
+  assert.ok(policy.includes('User-agent: GPTBot\nAllow: /'))
+  assert.ok(policy.includes('Sitemap: https://example.test/sitemap.xml'))
+  const packageRoot = join(root, 'node_modules/@nuxtjp/localized-site')
+  const { documentDelivery } = await import(pathToFileURL(join(packageRoot, 'documents/index.mjs')).href)
+  const { createDocumentWorker } = await import(pathToFileURL(join(packageRoot, 'documents/worker.mjs')).href)
+  const facts = JSON.parse(readFileSync(join(root, 'site.config.json'), 'utf8'))
+  const delivery = await documentDelivery(pathToFileURL(join(root, 'node_modules/.cache/nuxtjp-documents', facts.siteId) + '/'))
+  const worker = createDocumentWorker(delivery)
+  const assets = { ASSETS: { fetch(request: Request) {
+    const url = new URL(request.url)
+    return fetch(base + url.pathname + url.search, { method: request.method, headers: request.headers, redirect: 'manual' })
+  } } }
+  for (const route of ['/', '/en', '/docs', '/en/docs']) {
+    const result = await worker.fetch(new Request('https://example.test' + route, { headers: { accept: 'text/markdown' } }), assets)
+    assert.equal(result.status, 200)
+    assert.match(result.headers.get('content-type') ?? '', /^text\/markdown/)
+    assert.match(result.headers.get('vary') ?? '', /Accept/i)
+    assert.ok((await result.text()).includes('Canonical: https://example.test' + route))
+  }
   if (editorial === 'product') for (const prefix of ['', '/en']) assert.equal((await fetch(base + prefix + '/oss')).status, 404)
   const lock = JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8'))
   for (const [name, item] of Object.entries(lock.packages)) {
