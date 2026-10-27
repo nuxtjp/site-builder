@@ -1,6 +1,9 @@
-import { resolve } from 'node:path'
+import { resolve, join } from 'node:path'
+import { materializeDefaultDocuments } from '../documents/default.mjs'
+import mdcModule from '@nuxtjs/mdc'
 import {
   addComponent,
+  addTemplate,
   addImports,
   addLayout,
   addPlugin,
@@ -46,11 +49,23 @@ const localizedSiteModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOp
       throw new Error('nuxtJpLocalizedSite.contentRoot must be declared explicitly')
     }
     const resolver = createResolver(import.meta.url)
+    await installModule(mdcModule, { highlight: false, components: { prose: false } })
     if (options.consent) await installModule(resolver.resolve('./runtime/consent/module'), options.consent)
     const { loadSiteConfig } = await loadValidator()
     const config = loadSiteConfig(resolve(nuxt.options.rootDir, options.contentRoot))
     const pageFile = resolver.resolve('./runtime/app/pages/LocalizedContentPage.vue')
     const routes = siteRoutes(config)
+    const documentOutput = await materializeDefaultDocuments(config, join(nuxt.options.rootDir, 'node_modules/.cache/nuxtjp-documents', config.siteId))
+    addTemplate({ filename: 'nuxtjp-default-documents.mjs', getContents: () => `export { default } from ${JSON.stringify(documentOutput.components)}` })
+    addTemplate({ filename: 'nuxtjp-default-documents.d.mts', getContents: () => "import type { FunctionalComponent } from 'vue'\ndeclare const components: Record<string, FunctionalComponent>\nexport default components\n" })
+    nuxt.hook('pages:resolved', pages => {
+      if (pages.some(page => page.file === pageFile)) {
+        // Nuxt's fallback Nitro type omits the supported Nitro 2 publicAssets option.
+        const nitro = nuxt.options.nitro as { publicAssets?: { dir: string; maxAge: number }[] }
+        nitro.publicAssets ??= []
+        if (!nitro.publicAssets.some(asset => asset.dir === documentOutput.publicDirectory)) nitro.publicAssets.push({ dir: documentOutput.publicDirectory, maxAge: 0 })
+      }
+    })
     const presentation = validatePresentation(options.presentation)
     const layout = presentation ? 'editorial-site' : 'localized-site'
     nuxt.options.runtimeConfig.public.nuxtJpPresentation = presentation

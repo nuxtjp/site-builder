@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useSeoMeta, useHead, createError } from '#imports'
-import data from './content.json'
+import data from './.generated-documents/content.json'
+import documentComponents from './.generated-documents/components.mjs'
+import { h } from 'vue'
+import { resolveComponent } from '#imports'
 import type { SiteContent, Locale } from './types'
 import SiteHeader from './components/SiteHeader.vue'
-import PageSections from './components/PageSections.vue'
 import ResourceLibrary from './components/ResourceLibrary.vue'
 import DownloadOverview from './components/DownloadOverview.vue'
 const route = useRoute()
+const documentLink = (props: { href: string; title: string; summary?: string }) => h(resolveComponent('NuxtLink'), { to: local(props.href), class: 'site-link-card' }, () => [h('strong', props.title), props.summary ? h('span', props.summary) : null])
+const markdownComponents = { DocumentLink: documentLink }
+const documentComponent = computed(() => documentComponents[`${locale.value}:${path.value}`])
 const locale = computed<Locale>(() => /^\/(ja|en)(\/|$)/.exec(route.path)?.[1] as Locale || data.defaultLocale as Locale)
 const path = computed(() => route.path.replace(/^\/(ja|en)(?=\/|$)/, '').replace(/\/$/, '') || '/')
 const content = computed(() => data.locales[locale.value] as SiteContent)
@@ -20,6 +25,7 @@ const title = computed(() => `${page.value?.title.replace(/\n/g, ' ')} | ${conte
 useSeoMeta({ title, description: () => page.value?.summary, ogTitle: title, ogDescription: () => page.value?.summary, ogImage: () => `${data.origin}${content.value.icon}` })
 useHead(() => ({ htmlAttrs: { lang: locale.value }, link: [
   { rel: 'canonical', href: `${data.origin}${local(path.value)}` },
+  { rel: 'alternate', type: 'text/markdown', href: `${data.origin}/raw${local(path.value) === '/' ? '/index' : local(path.value).replace(/\/$/, '')}.md` },
   ...(['ja', 'en'] as const).map(lang => ({ rel: 'alternate' as const, type: 'text/html', hreflang: lang, href: `${data.origin}${local(path.value, lang)}` })),
   { rel: 'alternate', type: 'text/html', hreflang: 'x-default', href: `${data.origin}${local(path.value, data.defaultLocale as Locale)}` }
 ] }))
@@ -36,7 +42,7 @@ useHead(() => ({ htmlAttrs: { lang: locale.value }, link: [
         <div v-if="page.kind === 'home'" class="site-brand-art" aria-hidden="true"><div class="site-orbit"></div><img :src="content.icon" width="220" height="220" alt="" fetchpriority="high"><span>{{ content.brand }}</span></div>
       </section>
       <div class="site-body">
-        <PageSections :sections="page.sections" :local="local" />
+        <component :is="documentComponent" :components="markdownComponents" class="site-document" />
         <ResourceLibrary v-if="page.kind === 'catalog'" :resources="content.resources" :locale="locale" :local="local" />
         <DownloadOverview v-if="page.kind === 'catalog' || (data.siteId === 'coela' && page.kind === 'home')" :locale="locale" />
         <section v-if="page.kind === 'journal'" class="site-journal">

@@ -1,6 +1,6 @@
 {
   "name": "@nuxtjp/localized-site",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Contract-first Japanese and English public-site module for Nuxt",
   "type": "module",
   "license": "Apache-2.0",
@@ -25,7 +25,10 @@
     "security",
     "ASSET-SCOPE.md",
     "docs/public-showcase*",
-    "templates"
+    "templates",
+    "documents",
+    "docs/markdown-mdc.ja.md",
+    "docs/agent-readable-documents.ja.md"
   ],
   "bin": {
     "nuxtjp-localized-site": "./bin/nuxtjp-localized-site.mjs"
@@ -62,14 +65,18 @@
       "types": "./dist/runtime/consent/module.d.ts",
       "import": "./dist/runtime/consent/module.js"
     },
-    "./consent/schema": "./schemas/consent-v1.schema.json"
+    "./consent/schema": "./schemas/consent-v1.schema.json",
+    "./documents": {
+      "types": "./documents/index.d.mts",
+      "import": "./documents/index.mjs"
+    }
   },
   "scripts": {
     "build:module": "nuxt-module-build build",
     "build:validator": "tsc -p tsconfig.validator.json",
     "build": "pnpm run build:security && pnpm run build:validator && pnpm run build:module && nuxt build playground",
     "typecheck": "vue-tsc --noEmit --project tsconfig.json",
-    "test": "vitest run && pnpm run test:organization && pnpm run test:dependency-security && pnpm run test:consumer-security && pnpm test:site-template",
+    "test": "vitest run && pnpm run test:organization && pnpm run test:dependency-security && pnpm run test:consumer-security && pnpm test:site-template && pnpm test:documents",
     "validate:example": "node ./bin/nuxtjp-localized-site.mjs validate --content-root ./examples/content",
     "prepack": "pnpm test && pnpm typecheck && pnpm build && pnpm validate:example",
     "test:organization": "pnpm run build:validator && pnpm run build:module && node --test test/organization-check.mjs",
@@ -77,7 +84,8 @@
     "test:consumer-security": "node --test scripts/consumer-security.check.mts",
     "test:site-template": "node --test scripts/service-template.check.mjs",
     "build:security": "tsc -p tsconfig.security.json",
-    "test:consent:browser": "node test/run-consent-browser.mjs"
+    "test:consent:browser": "node test/run-consent-browser.mjs",
+    "test:documents": "node --test scripts/documents.check.mjs"
   },
   "peerDependencies": {
     "nuxt": "^4.6.2",
@@ -88,6 +96,7 @@
     "@nuxt/kit": "4.6.2",
     "@nuxt/schema": "4.6.2",
     "@nuxtjp/dependency-security": "0.2.0",
+    "@nuxtjs/mdc": "0.23.2",
     "vanilla-cookieconsent": "3.1.0"
   },
   "devDependencies": {

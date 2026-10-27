@@ -95,10 +95,24 @@ try {
       assert.ok(html.includes('rel="canonical"'))
       assert.ok(html.includes('hreflang="ja"') && html.includes('hreflang="en"'))
       assert.ok(html.includes(locale === 'ja' ? 'サンプルサービス' : 'Sample Service'))
+      assert.ok(html.includes('type="text/markdown"'))
+      const markdown = await fetch(base + '/raw' + (route === '/' ? '/index' : route) + '.md')
+      assert.equal(markdown.status, 200)
+      assert.match(markdown.headers.get('content-type') ?? '', /^text\/markdown\b/)
+      const body = await markdown.text()
+      const content = JSON.parse(readFileSync(join(root, 'site.config.json'), 'utf8')).content[locale]
+      const expected = path === '/' ? { title: content.brand, sections: [] } : Object.values(content.docs).find((doc: any) => doc.slug === path) as any
+      assert.ok(body.includes(expected.title))
+      for (const section of expected.sections) for (const paragraph of section.body) assert.ok(body.includes(paragraph))
+      assert.ok(!body.includes('::document-link') && !body.startsWith('---'))
+      assert.ok(body.includes(`Canonical: https://example.test${route}\n`))
       assert.ok(!/<a[^>]*href="(?:#|mailto:|tel:|javascript:|undefined|)"/.test(html))
     }
   }
   assert.equal((await fetch(base + '/missing-page')).status, 404)
+  const llms = await fetch(base + '/llms.txt')
+  assert.equal(llms.status, 200)
+  assert.equal((await llms.text()).split('\n').filter(line => line.startsWith('- [')).length, 8)
   if (editorial === 'product') for (const prefix of ['', '/en']) assert.equal((await fetch(base + prefix + '/oss')).status, 404)
   const lock = JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8'))
   for (const [name, item] of Object.entries(lock.packages)) {
