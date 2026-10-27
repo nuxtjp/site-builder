@@ -1,7 +1,7 @@
 import { defineNuxtPlugin, useAppConfig } from '#imports'
 import * as CookieConsent from 'vanilla-cookieconsent'
 import type { CookieConsentConfig } from 'vanilla-cookieconsent'
-import { validateConsent, type ConsentOptions } from './config'
+import { validateConsent, consentLanguage, type ConsentOptions } from './config'
 import { translations } from './translations'
 export default defineNuxtPlugin(nuxt => {
   const raw = useAppConfig().nuxtJpConsent as ConsentOptions & { revision: number }
@@ -43,7 +43,7 @@ export default defineNuxtPlugin(nuxt => {
       cookies: service.cookies.map(name => ({ name }))
     }
   }
-  const language = () => /^\/en(?:\/|$)/.test(window.location.pathname) ? 'en' : 'ja'
+  const language = () => consentLanguage(window.location.pathname, options.defaultLocale)
   const label = () => language() === 'en' ? 'Privacy settings' : 'プライバシー設定'
   let button: HTMLButtonElement
   let available = false

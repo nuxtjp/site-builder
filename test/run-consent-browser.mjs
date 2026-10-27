@@ -1,8 +1,8 @@
 import { spawn } from 'node:child_process'
 import { setTimeout as delay } from 'node:timers/promises'
 const root=new URL('../',import.meta.url)
-for(const empty of ['0','1']) {
- const env={...process.env,CONSENT_FIXTURE_EMPTY:empty,NUXT_TELEMETRY_DISABLED:'1'}
+for(const {empty,defaultLocale} of process.argv.includes('--default-locale-only') ? [{empty:'1',defaultLocale:'en'}] : [{empty:'0',defaultLocale:'ja'},{empty:'1',defaultLocale:'ja'},{empty:'1',defaultLocale:'en'}]) {
+ const env={...process.env,CONSENT_FIXTURE_EMPTY:empty,CONSENT_FIXTURE_DEFAULT_LOCALE:defaultLocale,NUXT_TELEMETRY_DISABLED:'1'}
  let output='',exit
  const server=spawn(process.execPath,['node_modules/nuxt/bin/nuxt.mjs','dev','test/fixtures/consent','--host','127.0.0.1','--port','3420'],{cwd:root,env,stdio:['ignore','pipe','pipe']})
  const stopped=new Promise(resolve=>server.once('exit',code=>{exit=code;resolve()}))
@@ -16,7 +16,7 @@ for(const empty of ['0','1']) {
    await delay(500)
   }
   if(!ready)throw Error('Consent fixture did not start: '+output)
-  const test=spawn(process.execPath,['test/consent.browser.mjs'],{cwd:root,env,stdio:'inherit'})
+  const test=spawn(process.execPath,[defaultLocale==='en'?'test/consent-default-locale.browser.mjs':'test/consent.browser.mjs'],{cwd:root,env,stdio:'inherit'})
   const code=await new Promise((resolve,reject)=>{test.once('error',reject);test.once('exit',resolve)})
   if(code!==0)throw Error('Consent browser test failed')
  } finally {

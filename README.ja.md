@@ -89,3 +89,5 @@ Registry releases: [version tags and GitHub OIDC](docs/registry-release.md).
 定義は `schemas/consent-v1.schema.json`、設定と制約は英語READMEの
 「Declarative consent module」を参照してください。任意サービスなしでは自動バナーを出さず、
 設定ボタンだけを設けます。Cloudflare側の自動挿入は別途管理が必要です。
+
+英語が既定のサイトでは、同意設定に `defaultLocale: "en"` を指定できます。`/ja`・`/en` から始まるURLでは明示した言語を優先し、省略時は既存の日本語既定を保持します。

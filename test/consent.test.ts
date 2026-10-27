@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { validateConsent } from '../src/runtime/consent/config'
+import { validateConsent, consentLanguage } from '../src/runtime/consent/config'
 import { translations } from '../src/runtime/consent/translations'
 const base = { schemaVersion: 1, policyUrl: 'https://hat-tech.co.jp/privacy', policyRevision: 'contact-policy-review-1', services: [] }
 const service = { id: 'metrics', label: 'Example metrics', purpose: 'Count page visits', category: 'analytics', scripts: [{src:'https://metrics.example/script.js'}], cookies: ['metrics_id'] }
@@ -21,4 +21,12 @@ describe('consent definition', () => {
       expect(language.preferencesModal.sections[0]?.description).toContain(base.policyUrl)
     }
   })
+})
+
+it('supports English-default sites, explicit language routes and legacy Japanese defaults', () => {
+  expect(validateConsent({...base,defaultLocale:'en'}).defaultLocale).toBe('en')
+  expect(()=>validateConsent({...base,defaultLocale:'fr'})).toThrow()
+  for (const [path,expected] of [['/','en'],['/contact','en'],['/ja/contact','ja'],['/en/privacy','en'],['/english','en']] as const) expect(consentLanguage(path,'en')).toBe(expected)
+  expect(consentLanguage('/contact')).toBe('ja')
+  expect(consentLanguage('/en/contact','ja')).toBe('en')
 })
