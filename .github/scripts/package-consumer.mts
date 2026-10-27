@@ -166,6 +166,8 @@ The document body comes from the reviewed MDC source.
   mkdirSync(join(root, 'public/brand'), { recursive: true })
   writeFileSync(join(root, 'public/brand/owned.svg'), '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#087f5b"/></svg>')
   run('node', ['node_modules/@nuxtjp/localized-site/templates/adopt.mjs', join(root, 'site'), source])
+  const adapter = join(root, 'site/SitePage.vue')
+  writeFileSync(adapter, readFileSync(adapter, 'utf8').replace('<NuxtJpServiceSite ', '<NuxtJpServiceSite navigation-mode="tablet-menu" '))
   writeFileSync(join(root, 'nuxt.config.ts'), `import sitePages from './site/module'
 export default defineNuxtConfig({
     modules: [['@nuxtjp/localized-site', {contentRoot: '.', presentation: {theme: 'nuxtjp', scope: 'product'}}], sitePages],

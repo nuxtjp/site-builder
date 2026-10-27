@@ -4,7 +4,7 @@ import { chromium } from '@playwright/test'
 const base = process.argv[2]
 const browser = await chromium.launch({ headless: true })
 try {
-  for (const width of [390, 1440]) {
+  for (const width of [390, 900, 1440]) {
     const page = await browser.newPage({ viewport: { width, height: 900 } })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
@@ -17,7 +17,8 @@ try {
       assert.equal(color, 'rgb(24, 37, 54)')
       assert.equal(await page.locator('.site-button').evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(8, 127, 91)')
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false)
-      if (width === 390) {
+      assert.equal(await page.locator('.site-header nav').evaluate(element => getComputedStyle(element).columnGap), '20px')
+      if (width <= 1000) {
         const menu = page.getByRole('button', { name: prefix ? 'Menu' : 'メニュー' })
         await menu.click()
         assert.equal(await menu.getAttribute('aria-expanded'), 'true')

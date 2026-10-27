@@ -551,6 +551,33 @@
     transform: translateY(-3px);
   }
 }
+@media (max-width:1000px) {
+  :where(.service-site[data-navigation=tablet-menu]) .site-header {
+    flex-wrap: wrap;
+    padding: 15px 22px;
+    min-height: 74px;
+  }
+  :where(.service-site[data-navigation=tablet-menu]) .site-menu {
+    display: block;
+    background: transparent;
+    border: 1px solid #72848a;
+    border-radius: 5px;
+    padding: 8px 12px;
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
+  }
+  :where(.service-site[data-navigation=tablet-menu]) .site-header nav {
+    display: none;
+    width: 100%;
+    padding-block: 10px;
+    flex-wrap: wrap;
+    gap: 16px 22px;
+  }
+  :where(.service-site[data-navigation=tablet-menu]) .site-header nav.open {
+    display: flex;
+  }
+}
 .service-site:where([data-presentation=service]) {
   --experience-dark: #112b38;
   --experience-glow: color-mix(in srgb,var(--site-accent) 16%,white);
@@ -1306,31 +1333,4 @@
 }
 .service-site .site-hero-install .site-lead {
   margin-inline: auto;
-}
-@media (max-width:1000px) {
-  .service-site[data-navigation=tablet-menu] .site-header {
-    flex-wrap: wrap;
-    padding: 15px 22px;
-    min-height: 74px;
-  }
-  .service-site[data-navigation=tablet-menu] .site-menu {
-    display: block;
-    background: transparent;
-    border: 1px solid #72848a;
-    border-radius: 5px;
-    padding: 8px 12px;
-    color: inherit;
-    font: inherit;
-    font-size: 12px;
-  }
-  .service-site[data-navigation=tablet-menu] .site-header nav {
-    display: none;
-    width: 100%;
-    padding-block: 10px;
-    flex-wrap: wrap;
-    gap: 16px 22px;
-  }
-  .service-site[data-navigation=tablet-menu] .site-header nav.open {
-    display: flex;
-  }
 }
