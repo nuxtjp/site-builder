@@ -17,7 +17,7 @@ try {
       assert.equal(color, 'rgb(24, 37, 54)')
       assert.equal(await page.locator('.site-button').evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(8, 127, 91)')
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false)
-      assert.equal(await page.locator('.site-header nav').evaluate(element => getComputedStyle(element).columnGap), '20px')
+      assert.equal(await page.locator('.site-header nav').evaluate(element => getComputedStyle(element).columnGap), width <= 1100 ? '12px' : '20px')
       if (width <= 1000) {
         const menu = page.getByRole('button', { name: prefix ? 'Menu' : 'メニュー' })
         await menu.click()
