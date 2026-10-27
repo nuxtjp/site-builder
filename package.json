@@ -1,6 +1,6 @@
 {
   "name": "@nuxtjp/localized-site",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "description": "Contract-first Japanese and English public-site module for Nuxt",
   "type": "module",
   "license": "Apache-2.0",
@@ -57,7 +57,12 @@
     "./showcase/collectors": {
       "types": "./validator/showcase/collectors.d.ts",
       "import": "./validator/showcase/collectors.js"
-    }
+    },
+    "./consent": {
+      "types": "./dist/runtime/consent/module.d.ts",
+      "import": "./dist/runtime/consent/module.js"
+    },
+    "./consent/schema": "./schemas/consent-v1.schema.json"
   },
   "scripts": {
     "build:module": "nuxt-module-build build",
@@ -71,17 +76,19 @@
     "test:dependency-security": "node security/dependency-security.check.cjs",
     "test:consumer-security": "node --test scripts/consumer-security.check.mts",
     "test:site-template": "node --test scripts/service-template.check.mjs",
-    "build:security": "tsc -p tsconfig.security.json"
+    "build:security": "tsc -p tsconfig.security.json",
+    "test:consent:browser": "node test/run-consent-browser.mjs"
   },
   "peerDependencies": {
     "nuxt": "^4.6.2",
     "vue": "^3.5.40"
   },
   "dependencies": {
+    "@crowsi/provider-http-transport": "0.11.2",
     "@nuxt/kit": "4.6.2",
     "@nuxt/schema": "4.6.2",
-    "@crowsi/provider-http-transport": "0.11.2",
-    "@nuxtjp/dependency-security": "0.2.0"
+    "@nuxtjp/dependency-security": "0.2.0",
+    "vanilla-cookieconsent": "3.1.0"
   },
   "devDependencies": {
     "@nuxt/module-builder": "1.0.3",

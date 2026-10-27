@@ -46,6 +46,8 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify consent gating and withdrawal in a real browser
+        run: pnpm test:consent:browser
       - name: Verify backports in a fresh packed consumer
         run: node .github/scripts/package-consumer-security.mts "$RUNNER_TEMP/${PACKAGE_ARCHIVE_NUXTJP_LOCALIZED_SITE_NPM}" @nuxtjp/localized-site
       - name: Exercise public showcase in an isolated archive consumer
