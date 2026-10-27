@@ -31,6 +31,8 @@ pnpm exec nuxt build
 [公開文書とsem-lang連携方針](docs/agent-readable-documents.ja.md)に、HTMLとMarkdownの
 生成、各ownerの責務、意味対応付けの受入条件を定めています。0.4.0のsource candidateで
 MDC表示、静的Markdownとllms.txtを実装しました。[編集・生成手順](docs/markdown-mdc.ja.md)を参照。
+検索・回答参照・学習を許可するrobots.txtとContent Signals、sitemapとLinkの生成、
+任意のASSETS配信アダプターは[AIファーストの構成と受入](docs/agent-readiness.ja.md)を参照してください。
 正式公開とconsumerの依存更新は未完了であり、意味解析の追加は別の受入です。
 
 privacy/contactは説明文として表示し、未設定のリンクや操作を生成しません。

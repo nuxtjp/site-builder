@@ -1,6 +1,6 @@
 {
   "name": "@nuxtjp/localized-site",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Contract-first Japanese and English public-site module for Nuxt",
   "type": "module",
   "license": "Apache-2.0",
@@ -28,7 +28,8 @@
     "templates",
     "documents",
     "docs/markdown-mdc.ja.md",
-    "docs/agent-readable-documents.ja.md"
+    "docs/agent-readable-documents.ja.md",
+    "docs/agent-readiness.ja.md"
   ],
   "bin": {
     "nuxtjp-localized-site": "./bin/nuxtjp-localized-site.mjs"
@@ -70,6 +71,10 @@
       "types": "./documents/index.d.mts",
       "import": "./documents/index.mjs"
     },
+    "./documents/worker": {
+      "types": "./documents/worker.d.mts",
+      "import": "./documents/worker.mjs"
+    },
     "./service-site": {
       "types": "./dist/runtime/service-site/index.d.ts",
       "import": "./dist/runtime/service-site/index.js"
@@ -94,7 +99,7 @@
     "test:site-template": "node --test scripts/service-template.check.mjs",
     "build:security": "tsc -p tsconfig.security.json",
     "test:consent:browser": "node test/run-consent-browser.mjs",
-    "test:documents": "node --test scripts/documents.check.mjs",
+    "test:documents": "node --test scripts/documents.check.mjs scripts/document-delivery.check.mjs",
     "test:declarative-ui": "node --test scripts/declarative-ui.check.mjs"
   },
   "peerDependencies": {

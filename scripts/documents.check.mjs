@@ -38,6 +38,13 @@ test('all public documents generate raw Markdown, locale URLs and a deterministi
   assert.match(readFileSync(join(pub, 'raw/en.md'), 'utf8'), /https:\/\/example.test\/en\/docs/)
   assert.match(readFileSync(join(pub, 'llms.txt'), 'utf8'), /\/raw\/en\/docs.md/)
   assert.equal(await loadSiteDocuments(root), data)
+  const robots = readFileSync(join(pub, 'robots.txt'), 'utf8')
+  assert.match(robots, /Content-Signal: search=yes, ai-input=yes, ai-train=yes/)
+  assert.match(robots, /User-agent: GPTBot\nAllow: \//)
+  assert.ok(!robots.includes('Disallow: /'))
+  assert.match(robots, /Sitemap: https:\/\/example.test\/sitemap.xml/)
+  assert.match(readFileSync(join(pub, '_headers'), 'utf8'), /rel="sitemap"/)
+  assert.equal((readFileSync(join(pub, 'sitemap.xml'), 'utf8').match(/<url>/g) || []).length, 4)
 })
 test('draft bodies are excluded from browser data, raw URLs and the discovery index', async t => {
   const root = fixture(t)
@@ -45,6 +52,9 @@ test('draft bodies are excluded from browser data, raw URLs and the discovery in
   const data = await loadSiteDocuments(root), pub = await documentPublicDirectory(root)
   assert.ok(!JSON.stringify(data).includes('PRIVATE-NOT-PUBLISHED'))
   assert.ok(!readFileSync(join(pub, 'llms.txt'), 'utf8').includes('PRIVATE-NOT-PUBLISHED'))
+  assert.ok(!readFileSync(join(pub, 'sitemap.xml'), 'utf8').includes('/private'))
+  const { documentDelivery } = await import('../documents/index.mjs')
+  assert.ok(!(await documentDelivery(root)).routes.some(item => item.route === '/private'))
 })
 test('unregistered public routes, bindings and executable attributes fail before publication', async t => {
   const root = fixture(t)

@@ -63,6 +63,9 @@ pnpm pack
 The [public document and sem-lang integration policy](docs/agent-readable-documents.ja.md)
 defines ownership and acceptance. The 0.4.0 source candidate implements native MDC,
 static Markdown and llms.txt; see [editing and generation](docs/markdown-mdc.ja.md).
+See [AI-first discovery and acceptance](docs/agent-readiness.ja.md) for generated
+robots.txt, explicit permission for search/AI input/training, sitemap/Link headers,
+and the optional published-route ASSETS delivery adapter. Hosting acceptance is separate.
 Its formal registry release and consumer dependency updates are still required;
 semantic integration remains a separate acceptance step.
 

@@ -4,6 +4,7 @@ import { readFileSync, readdirSync, mkdirSync, writeFileSync, lstatSync } from '
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { parseDocument, escapeMarkdown, publicHref } from './source.mjs'
+import { writeDiscoveryAssets } from './discovery.mjs'
 const cache = new Map()
 const hash = value => createHash('sha256').update(value).digest('hex')
 function regular(path) { assert.ok(lstatSync(path).isFile() && !lstatSync(path).isSymbolicLink(), 'regular document source required') }
@@ -66,7 +67,7 @@ export default function Document(props) { return h(Renderer, {body, data:{}, pro
 `)
     components.push({ key, component })
     const destination = join(publicDirectory, raw)
-    markdowns.push({ destination, locale, route, doc, local })
+    markdowns.push({ destination, locale, route, raw, doc, local })
     index.push(`- [${escapeMarkdown(doc.page.label || doc.page.title.replace(/\n/g, ' '))}](${data.origin}${raw}): ${escapeMarkdown(doc.page.summary)}`)
   }
   const wanted = new Set()
@@ -95,7 +96,8 @@ export default function Document(props) { return h(Renderer, {body, data:{}, pro
     writeFileSync(destination, `# ${escapeMarkdown(doc.page.title.replace(/\n/g, ' '))}\n\n${escapeMarkdown(doc.page.summary)}\n\n${doc.markdown}${projection}\n\nCanonical: ${data.origin}${route}\n`)
   }
   writeFileSync(join(publicDirectory, 'llms.txt'), `# ${data.locales[data.defaultLocale].brand}\n\n${index.join('\n')}\n`)
-  writeFileSync(join(publicDirectory, '_headers'), '/raw/*\n  Content-Type: text/markdown; charset=utf-8\n  X-Content-Type-Options: nosniff\n')
+  writeDiscoveryAssets(publicDirectory, data.origin, markdowns)
+  writeFileSync(join(output, 'delivery.json'), JSON.stringify({ origin: data.origin, routes: markdowns.map(({ route, raw }) => ({ route, raw })) }) + '\n')
   writeFileSync(join(generated, 'content.json'), JSON.stringify(data) + '\n')
   writeFileSync(join(generated, 'components.mjs'), components.map((item, i) => `import D${i} from './${digest}/${item.component}'`).join('\n') + '\nexport default {' + components.map((item, i) => `${JSON.stringify(item.key)}: D${i}`).join(',') + '}\n')
   writeFileSync(join(generated, 'components.d.mts'), "import type { FunctionalComponent } from 'vue'\ndeclare const components: Record<string, FunctionalComponent>\nexport default components\n")
@@ -106,4 +108,8 @@ export default function Document(props) { return h(Renderer, {body, data:{}, pro
 export async function documentPublicDirectory(root) {
   await loadSiteDocuments(root)
   return JSON.parse(readFileSync(new URL('./.generated-documents/public-directory.json', root), 'utf8'))
+}
+export async function documentDelivery(root) {
+  const directory = await documentPublicDirectory(root)
+  return JSON.parse(readFileSync(join(directory, '..', 'delivery.json'), 'utf8'))
 }

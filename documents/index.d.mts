@@ -5,3 +5,4 @@ export interface SiteDocumentLocale { brand: string; caption: string; origin: st
 export interface SiteDocuments { siteId: string; origin: string; defaultLocale: 'ja' | 'en'; prefixDefaultLocale?: boolean; localeRootTrailingSlash?: boolean; locales: { ja: SiteDocumentLocale; en: SiteDocumentLocale } }
 export function loadSiteDocuments(root: URL | string): Promise<SiteDocuments>
 export function documentPublicDirectory(root: URL): Promise<string>
+export function documentDelivery(root: URL): Promise<import('./worker.mjs').DocumentDelivery>
