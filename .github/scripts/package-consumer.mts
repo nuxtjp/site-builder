@@ -97,7 +97,7 @@ try {
       assert.ok(html.includes(locale === 'ja' ? 'サンプルサービス' : 'Sample Service'))
       assert.ok(html.includes('type="text/markdown"'))
       const markdown = await fetch(base + '/raw' + (route === '/' ? '/index' : route) + '.md')
-      assert.equal(markdown.status, 200)
+      assert.equal(markdown.status, 200, `Markdown unavailable for ${route}: ${markdown.url}`)
       assert.match(markdown.headers.get('content-type') ?? '', /^text\/markdown\b/)
       const body = await markdown.text()
       const content = JSON.parse(readFileSync(join(root, 'site.config.json'), 'utf8')).content[locale]

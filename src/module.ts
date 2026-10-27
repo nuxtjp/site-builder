@@ -58,13 +58,17 @@ const localizedSiteModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOp
     const documentOutput = await materializeDefaultDocuments(config, join(nuxt.options.rootDir, 'node_modules/.cache/nuxtjp-documents', config.siteId))
     addTemplate({ filename: 'nuxtjp-default-documents.mjs', getContents: () => `export { default } from ${JSON.stringify(documentOutput.components)}` })
     addTemplate({ filename: 'nuxtjp-default-documents.d.mts', getContents: () => "import type { FunctionalComponent } from 'vue'\ndeclare const components: Record<string, FunctionalComponent>\nexport default components\n" })
-    nuxt.hook('pages:resolved', pages => {
-      if (pages.some(page => page.file === pageFile)) {
-        // Nuxt's fallback Nitro type omits the supported Nitro 2 publicAssets option.
-        const nitro = nuxt.options.nitro as { publicAssets?: { dir: string; maxAge: number }[] }
-        nitro.publicAssets ??= []
-        if (!nitro.publicAssets.some(asset => asset.dir === documentOutput.publicDirectory)) nitro.publicAssets.push({ dir: documentOutput.publicDirectory, maxAge: 0 })
-      }
+    // Nitro can initialize before filesystem pages resolve. Register assets during
+    // setup, then select them from the final app before public assets are copied.
+    const nitroConfig = nuxt.options.nitro as { publicAssets?: { dir: string; maxAge: number }[] }
+    nitroConfig.publicAssets ??= []
+    nitroConfig.publicAssets.push({ dir: documentOutput.publicDirectory, maxAge: 0 })
+    nuxt.hook('nitro:init', nitro => {
+      const asset = nitro.options.publicAssets.find(asset => asset.dir === documentOutput.publicDirectory)
+      nuxt.hook('app:templates', app => {
+        nitro.options.publicAssets = nitro.options.publicAssets.filter(asset => asset.dir !== documentOutput.publicDirectory)
+        if (asset && app.pages?.some(page => page.file === pageFile)) nitro.options.publicAssets.push(asset)
+      })
     })
     const presentation = validatePresentation(options.presentation)
     const layout = presentation ? 'editorial-site' : 'localized-site'
