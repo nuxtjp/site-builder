@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, cpSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, cpSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { spawnSync, spawn } from 'node:child_process'
@@ -130,4 +130,27 @@ try {
     timer.unref()
     try { await exited } finally { clearTimeout(timer) }
   }
+}
+
+if (editorial === 'product') {
+  // A site-owned presentation replaces the default pages and publishes its own
+  // document assets. The removed default pages must not leave public documents.
+  writeFileSync(join(root, 'owned.vue'), '<template><main>Site-owned presentation</main></template>')
+  mkdirSync(join(root, 'public/raw'), { recursive: true })
+  writeFileSync(join(root, 'public/raw/owned.md'), '# Site-owned document\n')
+  writeFileSync(join(root, 'public/llms.txt'), '# Site-owned index\n')
+  writeFileSync(join(root, 'nuxt.config.ts'), `export default defineNuxtConfig({
+    modules: [['@nuxtjp/localized-site', {contentRoot: '.', presentation: {theme: 'nuxtjp', scope: 'product'}}],
+      function (_options, nuxt) {
+        nuxt.hook('pages:extend', pages => pages.splice(0, pages.length, {path: '/', file: ${JSON.stringify(join(root, 'owned.vue'))}}))
+        nuxt.hook('prerender:routes', context => context.routes.clear())
+      }], devtools: {enabled: false}
+  })`)
+  run('node', ['node_modules/nuxt/bin/nuxt.mjs', 'build'])
+  assert.equal(readFileSync(join(root, '.output/public/llms.txt'), 'utf8'), '# Site-owned index\n')
+  assert.equal(readFileSync(join(root, '.output/public/raw/owned.md'), 'utf8'), '# Site-owned document\n')
+  for (const route of ['index', 'en', 'docs', 'docs/security']) {
+    assert.equal(existsSync(join(root, '.output/public/raw', route + '.md')), false, `Removed page document leaked: ${route}`)
+  }
+  console.log(JSON.stringify({ site_owned_presentation: 'pass', removed_default_documents: 'not served' }))
 }
