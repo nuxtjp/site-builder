@@ -15,7 +15,7 @@ writeFileSync(join(root, '.npmrc'), '')
 env.NPM_CONFIG_USERCONFIG = join(root, '.npmrc')
 writeFileSync(join(root, 'package.json'), JSON.stringify({
   private: true, type: 'module', dependencies: { '@nuxtjp/localized-site': `file:${archive}`, nuxt: '4.6.2', vue: '3.5.44' },
-  devDependencies: { typescript: '5.9.3', 'vue-tsc': '3.2.8' }
+  devDependencies: { typescript: '5.9.3', 'vue-tsc': '3.2.8', '@types/node': '24.19.2' }
 }, null, 2))
 function run(command, args) {
   const p = spawnSync(command, args, { cwd: root, env, encoding: 'utf8', timeout: 600_000 })
@@ -133,24 +133,74 @@ try {
 }
 
 if (editorial === 'product') {
-  // A site-owned presentation replaces the default pages and publishes its own
-  // document assets. The removed default pages must not leave public documents.
-  writeFileSync(join(root, 'owned.vue'), '<template><main>Site-owned presentation</main></template>')
-  mkdirSync(join(root, 'public/raw'), { recursive: true })
-  writeFileSync(join(root, 'public/raw/owned.md'), '# Site-owned document\n')
-  writeFileSync(join(root, 'public/llms.txt'), '# Site-owned index\n')
-  writeFileSync(join(root, 'nuxt.config.ts'), `export default defineNuxtConfig({
-    modules: [['@nuxtjp/localized-site', {contentRoot: '.', presentation: {theme: 'nuxtjp', scope: 'product'}}],
-      function (_options, nuxt) {
-        nuxt.hook('pages:extend', pages => pages.splice(0, pages.length, {path: '/', file: ${JSON.stringify(join(root, 'owned.vue'))}}))
-        nuxt.hook('prerender:routes', context => context.routes.clear())
-      }], devtools: {enabled: false}
+  // Exercise the actual shipped scaffold and shared UI, including replacement of
+  // default pages. Removed default documents must not remain in public assets.
+  const source = join(root, 'reviewed-documents')
+  const paths = ['/', '/docs', '/journal', '/privacy', '/security', '/sitemap', '/owned']
+  const facts = { siteId: 'owned-site', origin: 'https://example.test', defaultLocale: 'ja', locales: {} }
+  for (const locale of ['ja', 'en']) {
+    const directory = join(source, 'documents', locale)
+    mkdirSync(directory, { recursive: true })
+    facts.locales[locale] = { brand: 'Site-owned index', caption: '', origin: facts.origin, locale,
+      accent: '#087f5b', icon: '/brand/owned.svg', navigation: [{ title: 'Owned guide', href: '/docs' }], resources: [], pageOrder: paths }
+    for (const path of paths) {
+      const title = path === '/owned' ? 'Site-owned document' : 'Owned ' + (path === '/' ? 'home' : path.slice(1))
+      writeFileSync(join(directory, (path === '/' ? 'index' : path.slice(1)) + '.md'), `---
+path: ${JSON.stringify(path)}
+title: ${JSON.stringify(title)}
+summary: "Public source selected by the site owner."
+kind: ${path === '/' ? 'home' : 'page'}
+status: published
+---
+
+## Owned content
+
+The document body comes from the reviewed MDC source.
+
+::document-link{title="Owned guide" href="/docs"}
+::
+`)
+    }
+  }
+  writeFileSync(join(source, 'site.json'), JSON.stringify(facts))
+  mkdirSync(join(root, 'public/brand'), { recursive: true })
+  writeFileSync(join(root, 'public/brand/owned.svg'), '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#087f5b"/></svg>')
+  run('node', ['node_modules/@nuxtjp/localized-site/templates/adopt.mjs', join(root, 'site'), source])
+  writeFileSync(join(root, 'nuxt.config.ts'), `import sitePages from './site/module'
+export default defineNuxtConfig({
+    modules: [['@nuxtjp/localized-site', {contentRoot: '.', presentation: {theme: 'nuxtjp', scope: 'product'}}], sitePages],
+    devtools: {enabled: false}
   })`)
+  run('node', ['node_modules/nuxt/bin/nuxt.mjs', 'prepare'])
+  run('node', ['node_modules/nuxt/bin/nuxt.mjs', 'typecheck'])
   run('node', ['node_modules/nuxt/bin/nuxt.mjs', 'build'])
-  assert.equal(readFileSync(join(root, '.output/public/llms.txt'), 'utf8'), '# Site-owned index\n')
-  assert.equal(readFileSync(join(root, '.output/public/raw/owned.md'), 'utf8'), '# Site-owned document\n')
-  for (const route of ['index', 'en', 'docs', 'docs/security']) {
+  const index = readFileSync(join(root, '.output/public/llms.txt'), 'utf8')
+  assert.ok(index.startsWith('# Site-owned index\n'))
+  assert.equal(index.split('\n').filter(line => line.startsWith('- [')).length, 14)
+  assert.ok(readFileSync(join(root, '.output/public/raw/owned.md'), 'utf8').includes('# Site-owned document\n'))
+  for (const route of ['docs/security', 'docs/getting-started', 'en/docs/security']) {
     assert.equal(existsSync(join(root, '.output/public/raw', route + '.md')), false, `Removed page document leaked: ${route}`)
   }
-  console.log(JSON.stringify({ site_owned_presentation: 'pass', removed_default_documents: 'not served' }))
+  const service = spawn('node', ['.output/server/index.mjs'], { cwd: root, env: { ...env, NITRO_PORT: String(port), NITRO_HOST: '127.0.0.1' }, stdio: ['ignore', 'pipe', 'pipe'] })
+  let output = ''
+  for (const stream of [service.stdout, service.stderr]) stream.on('data', chunk => { output = (output + String(chunk)).slice(-4096) })
+  try {
+    const base = `http://127.0.0.1:${port}`
+    let ready = false
+    for (let i = 0; i < 40; i++) {
+      assert.equal(service.exitCode, null, output)
+      try { const response = await fetch(base); await response.body?.cancel(); if (response.ok) { ready = true; break } } catch {}
+      await new Promise(done => setTimeout(done, 250))
+    }
+    assert.ok(ready, output)
+    run('node', [new URL('./service-site-browser.mjs', import.meta.url).pathname, base])
+  } finally {
+    if (service.exitCode === null && service.signalCode === null) {
+      const exited = new Promise<void>(done => service.once('exit', () => done()))
+      service.kill('SIGTERM')
+      const timer = setTimeout(() => service.kill('SIGKILL'), 2000); timer.unref()
+      try { await exited } finally { clearTimeout(timer) }
+    }
+  }
+  console.log(JSON.stringify({ site_owned_presentation: 'pass', actual_shipped_scaffold: true, shared_css_and_MDC: true, removed_default_documents: 'not served' }))
 }

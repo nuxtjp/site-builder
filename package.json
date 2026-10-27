@@ -1,6 +1,6 @@
 {
   "name": "@nuxtjp/localized-site",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Contract-first Japanese and English public-site module for Nuxt",
   "type": "module",
   "license": "Apache-2.0",
@@ -69,6 +69,15 @@
     "./documents": {
       "types": "./documents/index.d.mts",
       "import": "./documents/index.mjs"
+    },
+    "./service-site": {
+      "types": "./dist/runtime/service-site/index.d.ts",
+      "import": "./dist/runtime/service-site/index.js"
+    },
+    "./service-site.css": "./dist/runtime/service-site/site.css",
+    "./declarative": {
+      "types": "./templates/declarative.d.mts",
+      "import": "./templates/declarative.mjs"
     }
   },
   "scripts": {
@@ -76,7 +85,7 @@
     "build:validator": "tsc -p tsconfig.validator.json",
     "build": "pnpm run build:security && pnpm run build:validator && pnpm run build:module && nuxt build playground",
     "typecheck": "vue-tsc --noEmit --project tsconfig.json",
-    "test": "vitest run && pnpm run test:organization && pnpm run test:dependency-security && pnpm run test:consumer-security && pnpm test:site-template && pnpm test:documents",
+    "test": "vitest run && pnpm run test:organization && pnpm run test:dependency-security && pnpm run test:consumer-security && pnpm test:site-template && pnpm test:documents && pnpm test:declarative-ui",
     "validate:example": "node ./bin/nuxtjp-localized-site.mjs validate --content-root ./examples/content",
     "prepack": "pnpm test && pnpm typecheck && pnpm build && pnpm validate:example",
     "test:organization": "pnpm run build:validator && pnpm run build:module && node --test test/organization-check.mjs",
@@ -85,7 +94,8 @@
     "test:site-template": "node --test scripts/service-template.check.mjs",
     "build:security": "tsc -p tsconfig.security.json",
     "test:consent:browser": "node test/run-consent-browser.mjs",
-    "test:documents": "node --test scripts/documents.check.mjs"
+    "test:documents": "node --test scripts/documents.check.mjs",
+    "test:declarative-ui": "node --test scripts/declarative-ui.check.mjs"
   },
   "peerDependencies": {
     "nuxt": "^4.6.2",

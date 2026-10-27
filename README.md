@@ -145,3 +145,10 @@ stale revision, both languages and necessary-only operation using synthetic
 tracking endpoints; it never calls a real analytics provider.
 
 Consent definitions may set `defaultLocale: "en"` for English-default sites. Explicit `/ja` and `/en` URL prefixes override it; omitting the field preserves the Japanese default.
+
+
+Version 0.5.0 adds `NuxtJpServiceSite`: route adapters declare data
+and named component slots while the module owns shared presentation and CSS.
+`@nuxtjp/localized-site/declarative` validates CSS-free page adapters before builds.
+Product-specific behavior and scoped component styles stay with their owner.
+See [the document and presentation contract](docs/markdown-mdc.ja.md).

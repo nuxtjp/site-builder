@@ -12,3 +12,24 @@ export interface SiteContent {
   navigation: Link[]; pages: Page[]; resources: Resource[]
   secondaryAction?: Link
 }
+
+
+
+export type PreviewKind = 'workspace' | 'directory' | 'meaning' | 'code' | 'portfolio' | 'business' | 'trust' | 'plan' | 'environment'
+export interface Experience {
+  category: string
+  primary: Link
+  secondary: Link
+  pathsTitle: string
+  paths: Link[]
+  preview: {
+    kind: PreviewKind
+    label: string
+    title: string
+    rows: { label: string; detail: string }[]
+    outcome: string
+  }
+}
+
+export interface ServiceSiteData { siteId: string; origin: string; defaultLocale: Locale; locales: Record<Locale, SiteContent> }
+export type ServiceExperiences = Record<Locale, Experience>

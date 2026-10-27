@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { Resource, Locale } from '../types'
+import type { Resource, Locale } from './types'
 const props = defineProps<{ resources: Resource[]; locale: Locale; local: (path: string) => string }>()
 const query = ref('')
 const category = ref('')
