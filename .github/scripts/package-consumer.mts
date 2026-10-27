@@ -24,7 +24,7 @@ function run(command, args) {
 run('npm', ['install', '--registry=https://registry.npmjs.org', '--no-audit', '--no-fund'])
 copyFileSync(join(root, 'node_modules/@nuxtjp/localized-site/examples/content/site.config.json'), join(root, 'site.config.json'))
 const presentation = editorial ? `, presentation: {theme:'${editorial === 'portfolio' ? 'coela' : 'nuxtjp'}', scope:'${editorial}'}` : ''
-writeFileSync(join(root, 'nuxt.config.ts'), `export default defineNuxtConfig({ modules: [['@nuxtjp/localized-site', { contentRoot: '.' ${presentation} }]], devtools: { enabled: false }, nitro: { prerender: { ignore: ['/'] } } })`)
+writeFileSync(join(root, 'nuxt.config.ts'), `export default defineNuxtConfig({ modules: [['@nuxtjp/localized-site', { contentRoot: '.', consent: {schemaVersion:1,policyUrl:'https://hat-tech.co.jp/privacy',policyRevision:'consumer-fixture-v1',services:[]} ${presentation} }]], devtools: { enabled: false }, nitro: { prerender: { ignore: ['/'] } } })`)
 if (editorial) {
   const snapshot = JSON.parse(readFileSync(new URL('../../playground/data/showcase.json', import.meta.url)))
   snapshot.observedAt = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
@@ -39,6 +39,8 @@ writeFileSync(join(root, 'tsconfig.json'), JSON.stringify({ extends: './.nuxt/ts
 writeFileSync(join(root, 'smoke.mjs'), `
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import consentModule from '@nuxtjp/localized-site/consent'
+assert.equal(typeof consentModule, 'function')
 import { localePath, siteRoutes, maintenanceForService } from '@nuxtjp/localized-site/core'
 import { validateSiteConfig } from '@nuxtjp/localized-site/validator'
 import { validateShowcaseFeed, summarizeDownloads } from '@nuxtjp/localized-site/showcase'

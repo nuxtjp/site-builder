@@ -1,5 +1,6 @@
 declare module '#imports' {
-  export function defineNuxtPlugin(plugin: () => void): unknown
+  export const defineNuxtPlugin: typeof import('nuxt/app').defineNuxtPlugin
+  export const useAppConfig: typeof import('nuxt/app').useAppConfig
   export const useLocalizedSite: typeof import(
     '../app/composables/useLocalizedSite'
   ).useLocalizedSite

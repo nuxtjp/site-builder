@@ -83,3 +83,57 @@ Snapshots must be regular, bounded files without symlinks; route conflicts are r
 
 Dependency updates: [repository policy](docs/dependency-updates.md).
 Registry releases: [version tags and GitHub OIDC](docs/registry-release.md).
+
+
+## Declarative consent module
+
+Consent UI and storage use `vanilla-cookieconsent` 3.1.0 (MIT, no transitive
+runtime dependencies). This package supplies a strict Nuxt adapter, localized
+controls and consent-gated script loading; it is not a legal compliance certificate.
+Enable via the localized-site module's `consent` option, or independently through
+`@nuxtjp/localized-site/consent` with the same options:
+
+```ts
+consent: {
+  schemaVersion: 1,
+  policyUrl: 'https://hat-tech.co.jp/privacy',
+  policyRevision: 'your-reviewed-policy-revision',
+  services: []
+}
+```
+
+`schemas/consent-v1.schema.json` defines public data. The runtime validator also
+rejects duplicate IDs/resources, unsafe URL schemes, executable labels and
+unknown keys. Each optional service declares `id`, `label`, `purpose`, `category`
+(`functional`, `analytics`, `marketing`), HTTPS `scripts` (`src`, optional SRI
+`integrity`) and exact first-party root-path `cookies` to clear on withdrawal.
+No service may declare itself necessary. Do not list authentication cookies for
+optional cleanup. Parent-domain/custom-path, HttpOnly and third-party cookies
+need provider-side cleanup and are not handled by this adapter.
+
+With no optional services, no automatic banner or stored choice is created;
+a persistent Privacy settings control still explains essential operation and
+links the common policy. Optional scripts make no preload, connection hint or
+script request before consent. All optional categories start disabled; accept,
+reject and individual choices remain available. Choices are saved in origin-local
+storage for 180 days, equally for acceptance and refusal. CookieConsent includes
+a local consent ID and timestamps; this module never transmits them or shares
+choices between origins. Changing the definition/policy revision changes its
+build-time digest and invalidates previous consent. This does not constitute a
+server-side legal consent log. Policy acknowledgment and form processing remain
+separate from optional tracking choices.
+
+Withdrawal clears declared accessible cookies and reloads the document after
+saving the refusal, stopping already-running script timers/listeners. Data
+already sent cannot be recalled. Browser storage failure must not enable scripts.
+External `app.head` scripts and optional preconnect hints fail the build: declare
+resources here instead. This does not intercept scripts started by other modules,
+HTML injected at the CDN, images, fonts, fetch calls or arbitrary third-party
+iframes. Audit those paths separately; Cloudflare automatic RUM injection must
+be managed at the provider. Do not mark an unobserved provider setting as disabled.
+No blanket CookieConsent/Turnstile exemption or GDPR applicability is inferred.
+
+Run `pnpm test:consent:browser` after building the module. It exercises no-send
+before choice, rejection persistence, individual choices, withdrawal and cleanup,
+stale revision, both languages and necessary-only operation using synthetic
+tracking endpoints; it never calls a real analytics provider.

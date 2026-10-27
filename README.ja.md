@@ -79,3 +79,13 @@ content rootの `public/oss/showcase.json` に既存 `nuxtjp://showcase/v1` のr
 
 Dependency updates: [repository policy](docs/dependency-updates.md).
 Registry releases: [version tags and GitHub OIDC](docs/registry-release.md).
+
+
+## 同意管理
+
+`@nuxtjp/localized-site/consent` を独立したNuxtモジュールとして、または本モジュールの
+`consent` オプションから利用できます。既存のCookieConsent 3.1.0を再利用し、定義検証・
+日英UI・任意スクリプトの同意前停止・撤回後の再読込を提供します。
+定義は `schemas/consent-v1.schema.json`、設定と制約は英語READMEの
+「Declarative consent module」を参照してください。任意サービスなしでは自動バナーを出さず、
+設定ボタンだけを設けます。Cloudflare側の自動挿入は別途管理が必要です。

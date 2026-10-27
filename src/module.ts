@@ -4,18 +4,21 @@ import {
   addImports,
   addLayout,
   addPlugin,
+  installModule,
   addPrerenderRoutes,
   createResolver,
   defineNuxtModule,
   extendPages
 } from '@nuxt/kit'
 import type { NuxtModule } from '@nuxt/schema'
+import type { ConsentOptions } from './runtime/consent/config'
 import type { ResolvedSiteConfig } from './contracts/types'
 import { siteRoutes, localePath } from './runtime/core/path'
 import { loadOrganizationShowcase } from '../organization/index.mjs'
 import { validatePresentation, type PresentationOptions } from './runtime/core/presentation'
 
 export interface ModuleOptions {
+  consent?: ConsentOptions
   contentRoot?: string
   maintenance?: boolean
   presentation?: PresentationOptions
@@ -42,9 +45,10 @@ const localizedSiteModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOp
     if (!options.contentRoot) {
       throw new Error('nuxtJpLocalizedSite.contentRoot must be declared explicitly')
     }
+    const resolver = createResolver(import.meta.url)
+    if (options.consent) await installModule(resolver.resolve('./runtime/consent/module'), options.consent)
     const { loadSiteConfig } = await loadValidator()
     const config = loadSiteConfig(resolve(nuxt.options.rootDir, options.contentRoot))
-    const resolver = createResolver(import.meta.url)
     const pageFile = resolver.resolve('./runtime/app/pages/LocalizedContentPage.vue')
     const routes = siteRoutes(config)
     const presentation = validatePresentation(options.presentation)
