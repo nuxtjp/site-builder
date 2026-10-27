@@ -28,6 +28,11 @@ pnpm exec nuxt build
 
 ## 動作と制約
 
+[公開文書とsem-lang連携方針](docs/agent-readable-documents.ja.md)に、HTMLとMarkdownの
+生成、各ownerの責務、意味対応付けの受入条件を定めています。0.4.0のsource candidateで
+MDC表示、静的Markdownとllms.txtを実装しました。[編集・生成手順](docs/markdown-mdc.ja.md)を参照。
+正式公開とconsumerの依存更新は未完了であり、意味解析の追加は別の受入です。
+
 privacy/contactは説明文として表示し、未設定のリンクや操作を生成しません。
 メンテナンス表示は、ブラウザから同一originの`/maintenance.json`を読みます。取得・形式・期限の検証に失敗した場合は表示せず、サイト本文と言語切替は利用できます。
 配布物だけを試す場合は、registry版の代わりに承認された正確なTGZを導入してください。この手順はサイトの公開やregistry設定を行いません。

@@ -60,6 +60,12 @@ pnpm pack
 
 ## Documentation and license
 
+The [public document and sem-lang integration policy](docs/agent-readable-documents.ja.md)
+defines ownership and acceptance. The 0.4.0 source candidate implements native MDC,
+static Markdown and llms.txt; see [editing and generation](docs/markdown-mdc.ja.md).
+Its formal registry release and consumer dependency updates are still required;
+semantic integration remains a separate acceptance step.
+
 [Usage guide](https://github.com/nuxtjp/site-builder/blob/main/docs/getting-started.md) · [Schema](schemas/localized-site-v1.schema.json) · [Tests](https://github.com/nuxtjp/site-builder/tree/main/test) · [Security reporting](https://github.com/nuxtjp/site-builder/blob/main/SECURITY.md)
 
 Code: [Apache-2.0](LICENSE). [LICENSE-PREVIOUS](LICENSE-PREVIOUS) retains prior grants, and [NOTICE](NOTICE) preserves attribution.

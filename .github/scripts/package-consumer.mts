@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, cpSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, cpSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { spawnSync, spawn } from 'node:child_process'
@@ -95,10 +95,24 @@ try {
       assert.ok(html.includes('rel="canonical"'))
       assert.ok(html.includes('hreflang="ja"') && html.includes('hreflang="en"'))
       assert.ok(html.includes(locale === 'ja' ? 'サンプルサービス' : 'Sample Service'))
+      assert.ok(html.includes('type="text/markdown"'))
+      const markdown = await fetch(base + '/raw' + (route === '/' ? '/index' : route) + '.md')
+      assert.equal(markdown.status, 200, `Markdown unavailable for ${route}: ${markdown.url}`)
+      assert.match(markdown.headers.get('content-type') ?? '', /^text\/markdown\b/)
+      const body = await markdown.text()
+      const content = JSON.parse(readFileSync(join(root, 'site.config.json'), 'utf8')).content[locale]
+      const expected = path === '/' ? { title: content.brand, sections: [] } : Object.values(content.docs).find((doc: any) => doc.slug === path) as any
+      assert.ok(body.includes(expected.title))
+      for (const section of expected.sections) for (const paragraph of section.body) assert.ok(body.includes(paragraph))
+      assert.ok(!body.includes('::document-link') && !body.startsWith('---'))
+      assert.ok(body.includes(`Canonical: https://example.test${route}\n`))
       assert.ok(!/<a[^>]*href="(?:#|mailto:|tel:|javascript:|undefined|)"/.test(html))
     }
   }
   assert.equal((await fetch(base + '/missing-page')).status, 404)
+  const llms = await fetch(base + '/llms.txt')
+  assert.equal(llms.status, 200)
+  assert.equal((await llms.text()).split('\n').filter(line => line.startsWith('- [')).length, 8)
   if (editorial === 'product') for (const prefix of ['', '/en']) assert.equal((await fetch(base + prefix + '/oss')).status, 404)
   const lock = JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8'))
   for (const [name, item] of Object.entries(lock.packages)) {
@@ -116,4 +130,27 @@ try {
     timer.unref()
     try { await exited } finally { clearTimeout(timer) }
   }
+}
+
+if (editorial === 'product') {
+  // A site-owned presentation replaces the default pages and publishes its own
+  // document assets. The removed default pages must not leave public documents.
+  writeFileSync(join(root, 'owned.vue'), '<template><main>Site-owned presentation</main></template>')
+  mkdirSync(join(root, 'public/raw'), { recursive: true })
+  writeFileSync(join(root, 'public/raw/owned.md'), '# Site-owned document\n')
+  writeFileSync(join(root, 'public/llms.txt'), '# Site-owned index\n')
+  writeFileSync(join(root, 'nuxt.config.ts'), `export default defineNuxtConfig({
+    modules: [['@nuxtjp/localized-site', {contentRoot: '.', presentation: {theme: 'nuxtjp', scope: 'product'}}],
+      function (_options, nuxt) {
+        nuxt.hook('pages:extend', pages => pages.splice(0, pages.length, {path: '/', file: ${JSON.stringify(join(root, 'owned.vue'))}}))
+        nuxt.hook('prerender:routes', context => context.routes.clear())
+      }], devtools: {enabled: false}
+  })`)
+  run('node', ['node_modules/nuxt/bin/nuxt.mjs', 'build'])
+  assert.equal(readFileSync(join(root, '.output/public/llms.txt'), 'utf8'), '# Site-owned index\n')
+  assert.equal(readFileSync(join(root, '.output/public/raw/owned.md'), 'utf8'), '# Site-owned document\n')
+  for (const route of ['index', 'en', 'docs', 'docs/security']) {
+    assert.equal(existsSync(join(root, '.output/public/raw', route + '.md')), false, `Removed page document leaked: ${route}`)
+  }
+  console.log(JSON.stringify({ site_owned_presentation: 'pass', removed_default_documents: 'not served' }))
 }
