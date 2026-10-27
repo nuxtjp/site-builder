@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { parseDocument, escapeMarkdown, publicHref } from './source.mjs'
 import { writeDiscoveryAssets } from './discovery.mjs'
+import { contentSignal } from './policy.mjs'
 const cache = new Map()
 const hash = value => createHash('sha256').update(value).digest('hex')
 function regular(path) { assert.ok(lstatSync(path).isFile() && !lstatSync(path).isSymbolicLink(), 'regular document source required') }
@@ -112,4 +113,13 @@ export async function documentPublicDirectory(root) {
 export async function documentDelivery(root) {
   const directory = await documentPublicDirectory(root)
   return JSON.parse(readFileSync(join(directory, '..', 'delivery.json'), 'utf8'))
+}
+export async function documentWorker(root) {
+  const delivery = await documentDelivery(root)
+  const body = readFileSync(new URL('./worker.mjs', import.meta.url), 'utf8')
+  const marker = "import { contentSignal } from './policy.mjs'"
+  assert.ok(body.startsWith(marker), 'packaged delivery entry changed')
+  const source = body.replace(marker, `const contentSignal = ${JSON.stringify(contentSignal)}`) + `\nexport default createDocumentWorker(${JSON.stringify(delivery)})\n`
+  assert.ok(Buffer.byteLength(source) <= 1024 * 1024, 'delivery entry byte limit exceeded')
+  return { source, origin: delivery.origin, routes: delivery.routes.map(item => item.route) }
 }

@@ -6,3 +6,4 @@ export interface SiteDocuments { siteId: string; origin: string; defaultLocale: 
 export function loadSiteDocuments(root: URL | string): Promise<SiteDocuments>
 export function documentPublicDirectory(root: URL): Promise<string>
 export function documentDelivery(root: URL): Promise<import('./worker.mjs').DocumentDelivery>
+export function documentWorker(root: URL): Promise<{ source: string; origin: string; routes: string[] }>

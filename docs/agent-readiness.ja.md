@@ -29,6 +29,9 @@ export default createDocumentWorker(delivery)
 
 `documentDelivery(new URL('./site/', import.meta.url))`でビルド時の正規originと公開route/raw
 対応を得る。ASSETS binding、Workerのmainと公開ページの`assets.run_worker_first`が必要。
+`documentWorker(root)`は同じselectionを埋め込んだ依存なしのentry source、正規origin、
+対象route一覧を返す。ownerの配備処理はこのentryをpublic assetsの外に保持し、
+静的assetとともにhashを固定したarchiveへ含める。配備時の再生成はしない。
 静的assetのみを配備する既存経路では`_headers`によるAcceptの切り替えはできない。
 このアダプターの試験合格と、実際のCloudflare Worker配備は別の受入である。
 専用のMCP proxy、認証サーバー、公開refresh操作は追加しない。
