@@ -1,3 +1,4 @@
+import { validatePageAdapter } from '@nuxtjp/localized-site/declarative'
 import { fileURLToPath } from 'node:url'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -6,7 +7,7 @@ import data from './content.mjs'
 import { documentPublicDirectory } from '@nuxtjp/localized-site/documents'
 import { validateContent } from './check.mjs'
 
-// Site-owned presentation; the documents API requires the reviewed 0.4.0 module release.
+// Site-owned declarations require the shared presentation API from localized-site 0.5.0.
 const sitePages: NuxtModule = async (_options, nuxt) => {
   if (process.env.SITE_ID && process.env.SITE_ID !== data.siteId) return
   validateContent(data)
@@ -16,7 +17,7 @@ const sitePages: NuxtModule = async (_options, nuxt) => {
     locale, source: page.path
   })))
   const file = fileURLToPath(new URL('./SitePage.vue', import.meta.url))
-  nuxt.options.css.push(fileURLToPath(new URL('./site.css', import.meta.url)))
+  validatePageAdapter(file)
   nuxt.hook('pages:extend', pages => {
     pages.splice(0, pages.length, ...paths.map(({ path, locale, source }) => ({ name: `site-${locale}-${source.replace(/\W/g, '-')}`, path, file, meta: { layout: false } })))
   })

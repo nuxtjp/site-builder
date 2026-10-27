@@ -4,7 +4,8 @@
 Copy it into a site's `site` directory and add reviewed bilingual `documents/{ja,en}/**/*.md`
 and `site.json` publication metadata. Register `site/module.ts` after the published localized-site
 module and branding module. Keep the site's own LICENSE/NOTICE and brand rights.
-The consuming repository owns subsequent customization and versioned releases.
+The consuming repository owns content, named-slot composition and versioned releases.
+The shared module owns reusable components and CSS; route adapters contain no CSS.
 It has no runtime dependency on this checkout or the portfolio manager.
 
 For a one-time copy, run `node templates/adopt.mjs NEW_DIRECTORY REVIEWED_DOCUMENT_DIRECTORY`.
@@ -34,3 +35,10 @@ MDC is parsed and rendered with the official Nuxt MDC implementation; the same s
 source produces standard Markdown and llms.txt. Generated .generated-documents
 files are build artifacts and must be ignored by Git. The documents subpath is a
 new source-candidate API and requires its separately verified package release.
+
+
+The current scaffold requires localized-site 0.5.0's `NuxtJpServiceSite` and
+`declarative` APIs. Its route adapter passes document data into that component;
+its Nuxt adapter runs `validatePageAdapter` before page generation. The module
+registers its stylesheet once. No component or stylesheet copies are scaffolded.
+Keep product-specific components and their scoped styles with their owner.

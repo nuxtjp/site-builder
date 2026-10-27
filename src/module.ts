@@ -82,6 +82,7 @@ const localizedSiteModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOp
     nuxt.options.runtimeConfig.public.nuxtJpLocalizedSite = config
     addLayout(resolver.resolve('./runtime/app/layouts/localized-site.vue'), 'localized-site')
     if (presentation) addLayout(resolver.resolve('./runtime/app/layouts/editorial-site.vue'), 'editorial-site')
+    addComponent({ name: 'NuxtJpServiceSite', filePath: resolver.resolve('./runtime/service-site/ServiceSite.vue') })
     addComponent({
       name: 'NuxtJpLocalizedLanguageSwitcher',
       filePath: resolver.resolve(
@@ -144,6 +145,8 @@ const localizedSiteModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOp
     addPrerenderRoutes(routes)
     const stylesheet = resolver.resolve('./runtime/app/assets/localized-site.css')
     if (!nuxt.options.css.includes(stylesheet)) nuxt.options.css.push(stylesheet)
+    const serviceStylesheet = resolver.resolve('./runtime/service-site/site.css')
+    if (!nuxt.options.css.includes(serviceStylesheet)) nuxt.options.css.push(serviceStylesheet)
     if (presentation) nuxt.options.css.push(resolver.resolve('./runtime/app/assets/editorial-site.css'))
   }
 })

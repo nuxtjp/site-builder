@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRuntimeConfig } from '#imports'
-import type { Locale } from '../types'
+import type { Locale } from './types'
 defineProps<{ locale: Locale }>()
 const value = useRuntimeConfig().public.nuxtJpOssShowcase
 const feed = typeof value === 'string' && value ? JSON.parse(value) : null

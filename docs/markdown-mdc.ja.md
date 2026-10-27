@@ -103,3 +103,47 @@ source candidateのローカル試験は正式依存の更新、正式公開、�
 既存の`.sem`、JSON Schema、API・catalog・lockのJSONはそれぞれのnative契約を維持する。
 意味解析にはMDCを展開した標準Markdownと明示した語彙・contextを用い、見出し名からTermIdを
 推測しない。[sem-lang連携方針](agent-readable-documents.ja.md)を参照。
+
+
+## 0.5.0 の宣言的なページと CSS の所有
+
+`NuxtJpServiceSite` がヘッダー、経路、SEO、ヒーロー、MDC 文書、検索、関連記事、
+フッターを描画する。サイトの `SitePage.vue` は、公開文書の生成結果とサイト所有の
+表示データを渡し、必要な名前付き slot に固有コンポーネントを宣言する。
+共通の部品や CSS をサイトへコピーしない。
+
+```vue
+<script setup lang="ts">
+import data from './.generated-documents/content.json'
+import documents from './.generated-documents/components.mjs'
+import experiences from './experience.json'
+import type { ServiceSiteData, ServiceExperiences } from '@nuxtjp/localized-site/service-site'
+const siteData = data as ServiceSiteData
+const siteExperiences = experiences as ServiceExperiences
+</script>
+<template>
+  <NuxtJpServiceSite :data="siteData" :documents="documents" :experiences="siteExperiences" />
+</template>
+```
+
+共通 CSS は `src/runtime/service-site/site.css` をモジュールが一度だけ登録する。
+`.service-site` 内に限定し、通常の表示と portfolio 表示を `appearance` で選ぶ。
+`navigation-mode` は mobile-menu / tablet-menu、`hero-variants` は経路ごとの
+policy / install、`next-step-exclusions` は案内を出さない経路、`downloads` は
+パッケージ利用状況の表示を宣言する。サイト固有 ID による業務分岐は共通 UI へ持ち込まない。
+
+`hero-art`、`before-document`、`document`、`after-document`、`next-steps`、
+`footer-links` の slot は locale / path / page / content / local / Document を受け取る。
+`Document` は選択された MDC を同じ共通描画器で表示する部品であり、規約、稼働状況、
+導入画面などを選んだ経路だけ差し替えられる。ネットワーク取得、公開可否、署名、
+製品固有の判断は従来の所有者に残る。固有部品の CSS はそのコンポーネントに内包し、
+ページやサイトルートのグローバル CSS へ戻さない。
+
+経路アダプターは CSS、`<style>`、インラインの style / :style、CSS import を持たない。
+サイトの Nuxt モジュールで `@nuxtjp/localized-site/declarative` の
+`validatePageAdapter(file)` を呼び、ビルド前にこの制約を確認する。
+MDC の部品・属性 allowlist と公開選択の検証も引き続き有効である。
+この検査は任意の JavaScript の安全性を証明する sandbox ではない。
+
+0.4.0 の正式配布物は従来の MDC 文書 API を提供する。この共通表示 API は
+0.5.0 以降を必要とし、正式公開・依存 lock 更新・本番配備の受入は別に記録する。

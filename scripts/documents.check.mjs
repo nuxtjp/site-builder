@@ -54,6 +54,8 @@ test('unregistered public routes, bindings and executable attributes fail before
   await assert.rejects(parseDocument(source(meta) + '\n<script>secret</script>\n'), /raw HTML/)
   await assert.rejects(parseDocument(source(meta).replace('href="/docs"', 'href="javascript:alert(1)"')), /scheme/)
   await assert.rejects(parseDocument(source(meta).replace('title="Guide', ':title="Guide')), /attribute/)
+  await assert.rejects(parseDocument(source(meta).replace('href="/docs"', 'href="/docs" style="color:red"')), /attribute/)
+  await assert.rejects(parseDocument(source(meta).replace('href="/docs"', 'href="/docs" :style="theme"')), /attribute/)
   await assert.rejects(parseDocument('## Lost body\n\n' + source(meta)), /frontmatter/)
   await assert.rejects(parseDocument(source({ ...meta, documentSections: [] })), /unknown public metadata/)
 })

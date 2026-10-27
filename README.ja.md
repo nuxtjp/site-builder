@@ -96,3 +96,9 @@ Registry releases: [version tags and GitHub OIDC](docs/registry-release.md).
 設定ボタンだけを設けます。Cloudflare側の自動挿入は別途管理が必要です。
 
 英語が既定のサイトでは、同意設定に `defaultLocale: "en"` を指定できます。`/ja`・`/en` から始まるURLでは明示した言語を優先し、省略時は既存の日本語既定を保持します。
+
+
+0.5.0 では `NuxtJpServiceSite` に共通表示と CSS を集約しています。
+ページはデータと名前付き slot の宣言だけを持ち、ビルド前の `declarative` 検査で
+CSS の再混入を検出します。固有の判断・通信・コンポーネントのスタイルは各所有者に残します。
+詳しくは[文書・表示の契約](docs/markdown-mdc.ja.md)を参照してください。
