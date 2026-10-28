@@ -1,6 +1,6 @@
 {
   "name": "@nuxtjp/localized-site",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Contract-first Japanese and English public-site module for Nuxt",
   "type": "module",
   "license": "Apache-2.0",
@@ -110,7 +110,7 @@
     "@crowsi/provider-http-transport": "0.11.2",
     "@nuxt/kit": "4.6.2",
     "@nuxt/schema": "4.6.2",
-    "@nuxtjp/dependency-security": "0.2.0",
+    "@nuxtjp/dependency-security": "0.2.2",
     "@nuxtjs/mdc": "0.23.2",
     "vanilla-cookieconsent": "3.1.0"
   },
@@ -142,11 +142,13 @@
       "undici@7": "7.30.1",
       "undici@8": "8.12.2",
       "serialize-javascript@7": "7.1.3",
-      "fast-uri@3": "3.1.9"
+      "fast-uri@3": "3.1.9",
+      "fast-uri@4": "4.2.3"
     },
     "patchedDependencies": {
       "braces@3.0.3": ".nuxtjp-security/braces-3.0.3.patch",
-      "node-forge@1.4.0": ".nuxtjp-security/node-forge-1.4.0.patch"
+      "node-forge@1.4.0": ".nuxtjp-security/node-forge-1.4.0.patch",
+      "deepmerge@4.3.1": ".nuxtjp-security/deepmerge-4.3.1.patch"
     }
   },
   "keywords": [
