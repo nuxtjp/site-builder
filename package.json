@@ -107,12 +107,12 @@
     "vue": "^3.5.40"
   },
   "dependencies": {
-    "@crowsi/provider-http-transport": "0.11.2",
-    "@nuxt/kit": "4.6.2",
-    "@nuxt/schema": "4.6.2",
+    "@crowsi/provider-http-transport": "0.12.1",
+    "@nuxt/kit": "4.6.3",
+    "@nuxt/schema": "4.6.3",
     "@nuxtjp/dependency-security": "0.2.2",
     "@nuxtjs/mdc": "0.23.2",
-    "vanilla-cookieconsent": "3.1.0"
+    "vanilla-cookieconsent": "3.2.1"
   },
   "devDependencies": {
     "@nuxt/module-builder": "1.0.3",
@@ -122,7 +122,7 @@
     "typescript": "5.9.3",
     "vitest": "5.0.5",
     "vue": "3.5.44",
-    "vue-tsc": "3.3.13"
+    "vue-tsc": "3.3.14"
   },
   "repository": {
     "type": "git",
